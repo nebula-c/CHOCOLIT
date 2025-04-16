@@ -12,7 +12,8 @@ setup(
     },
     install_requires=[
         'PyQt5',
-        'numpy'
+        'numpy',
+        'caen-libs'
     ],
     entry_points={
         'console_scripts': [
