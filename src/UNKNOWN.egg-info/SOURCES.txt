@@ -1,9 +1,0 @@
-setup.py
-src/UNKNOWN.egg-info/PKG-INFO
-src/UNKNOWN.egg-info/SOURCES.txt
-src/UNKNOWN.egg-info/dependency_links.txt
-src/UNKNOWN.egg-info/top_level.txt
-src/chocolit/CHOCOLIT_v0.py
-src/py-caen-libs/_utils.py
-src/py-caen-libs/caenvme.py
-src/py-caen-libs/error.py

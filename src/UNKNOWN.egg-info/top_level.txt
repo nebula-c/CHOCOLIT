@@ -1,2 +1,0 @@
-chocolit
-py-caen-libs

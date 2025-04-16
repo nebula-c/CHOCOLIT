@@ -1,5 +1,0 @@
-setup.py
-src/CHOCOLIT.egg-info/PKG-INFO
-src/CHOCOLIT.egg-info/SOURCES.txt
-src/CHOCOLIT.egg-info/dependency_links.txt
-src/CHOCOLIT.egg-info/top_level.txt
