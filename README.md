@@ -1,6 +1,8 @@
 # CHOCOLIT
 CAEN High-voltage Online Control Operation & Logging Interface Tool
-For VME HV module, V4718, USB
+(For VME HV module, V4718 via USB)
+
+
 
 
 
