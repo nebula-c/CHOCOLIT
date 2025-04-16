@@ -40,7 +40,7 @@ class DataMonitor(QMainWindow):
 
         logo_layout = QHBoxLayout()
         logo_label_L = QLabel()
-        logo_path = pkg_resources.resource_filename('chocolit', '../images/mylogo.png')
+        logo_path = pkg_resources.resource_filename('chocolit', 'images/mylogo.png')
         print(logo_path)
         pixmap_L = QPixmap(logo_path)
         scaled_pixmap_L = pixmap_L.scaled(1000, 100, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
@@ -48,7 +48,7 @@ class DataMonitor(QMainWindow):
         # self.layout.addWidget(logo_label_L)
 
         logo_label_R = QLabel()
-        logo_path = pkg_resources.resource_filename('chocolit', '../images/Logo_letters_L.png')
+        logo_path = pkg_resources.resource_filename('chocolit', 'images/Logo_letters_L.png')
         pixmap_R = QPixmap(logo_path)
         scaled_pixmap_R = pixmap_R.scaled(1000, 100, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         logo_label_R.setPixmap(scaled_pixmap_R)
