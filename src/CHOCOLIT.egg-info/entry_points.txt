@@ -1,0 +1,2 @@
+[console_scripts]
+chocolit = run:main

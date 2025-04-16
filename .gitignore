@@ -1,2 +1,5 @@
+.DS_Store
 build
-./*.eff-info
+./*.eff-info/
+__pycache__
+*.pyc

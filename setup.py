@@ -4,8 +4,19 @@ from setuptools import find_packages, setup
 
 setup(
     name="CHOCOLIT",
-    version="0.1.0",
+    version="0.1",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
-    include_package_data=True
+    package_data={
+        'chocolit': ['images/*'],
+    },
+    install_requires=[
+        'PyQt5',
+        'numpy'
+    ],
+    entry_points={
+        'console_scripts': [
+            'chocolit = run:main',
+        ],
+    }
 )
