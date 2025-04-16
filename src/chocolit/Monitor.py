@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-import sys
 import random
 import numpy as np
-# from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QVBoxLayout, QHBoxLayout, QWidget, QHeaderView, QSizePolicy, QLabel, QCheckBox
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QColor, QPixmap
 from PyQt6.QtCore import QTimer, Qt
@@ -41,7 +39,6 @@ class DataMonitor(QMainWindow):
         logo_layout = QHBoxLayout()
         logo_label_L = QLabel()
         logo_path = pkg_resources.resource_filename('chocolit', 'images/mylogo.png')
-        print(logo_path)
         pixmap_L = QPixmap(logo_path)
         scaled_pixmap_L = pixmap_L.scaled(1000, 100, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         logo_label_L.setPixmap(scaled_pixmap_L)

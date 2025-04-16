@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
-from pycaenlibs import caenvme as vme
+from caen_libs import caenvme as vme
 from .register_map import REGISTER_MAP
-# from .register_map_rapid import REGISTER_MAP
 import copy
 
 class VME_READ():
-    # __vme_base_address: int = field(default=0)
-    # __address_modifier: vme.AddressModifiers = field(default=vme.AddressModifiers.A32_U_DATA)
-    # __data_width: vme.DataWidth = field(default=vme.DataWidth.D32)
-
     __boardtype = "USB_V4718_LOCAL"
     __linknumber = 21475
     __conetnode = 0
@@ -40,7 +35,6 @@ class VME_READ():
         print(a)
 
     def read_cycle(self,address):
-        """Read cycle"""
         try:
             value = self.device.read_cycle(self.__vme_base_address | address, self.__address_modifier, self.__data_width)
         except vme.Error as ex:
@@ -55,9 +49,6 @@ class VME_READ():
         # print(converted)
         return converted
 
-    def settarget(self,):
-        print("hello world")
-
     def setImonZoom(self,):
         if(self.__imon_zoom):
             self.__imon_zoom = False
@@ -65,8 +56,7 @@ class VME_READ():
                 try:
                     self.write_cycle(self.register_map["CH{}_ImonRange".format(i_ch)],0x0000)
                 except ValueError as e:
-                    print(f"에러 발생: {e}")
-                    print("error")
+                    print(f"Error: {e}")
                     continue
             
         else:
@@ -75,8 +65,7 @@ class VME_READ():
                 try:
                     self.write_cycle(self.register_map["CH{}_ImonRange".format(i_ch)],0x001)
                 except ValueError as e:
-                    print(f"에러 발생: {e}")
-                    print("error")
+                    print(f"Error: {e}")
                     continue
 
     def modi_reg_map(self,bool_map):
@@ -90,7 +79,6 @@ class VME_READ():
         print(self.register_map)
     
     def write_cycle(self,address,val_01):
-        """Write cycle"""
         try:
             self.device.write_cycle(self.__vme_base_address | address, val_01, self.__address_modifier, self.__data_width)
         except vme.Error as ex:
