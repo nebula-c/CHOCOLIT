@@ -9,6 +9,8 @@ from PyQt6.QtCharts import QChart, QChartView, QLineSeries, QValueAxis
 from datetime import datetime
 import os,sys
 import pkg_resources
+import logging
+import time
 
 
 from .vme_read import VME_READ
@@ -17,8 +19,20 @@ from .vme_read import VME_READ
 class DataMonitor(QMainWindow):
     __vme = VME_READ()
     reg_map = __vme.convert_register_map()
+    __is_inzoomed = True
+    index_vmon_col = -1
+    index_imon_col = -1
+    index_status_col = -1
 
-    def __init__(self):
+    def __init__(self,log_filename,testmode=False):
+        logging.basicConfig(
+            filename=log_filename,
+            level=logging.INFO,
+            format="%(asctime)s, %(message)s"
+        )
+        is_test=testmode
+
+        
         super().__init__()
         self.setWindowTitle("Channel Data Monitor")
         self.setGeometry(100, 100, 800, 600)
@@ -69,33 +83,7 @@ class DataMonitor(QMainWindow):
         
     
 
-        for row in range(6):
-            checkbox = QCheckBox("CH{}".format(row))
-            checkbox.setChecked(True)
-            checkbox.toggled.connect(lambda checked, r=row: self.table.setRowHidden(r, not checked))
-            checkbox.toggled.connect(lambda checked, k="CH{}".format(row): self.dict_reg_bool.update({k: checked}))
-            # checkbox.toggled.connect(lambda checked: print(self.dict_reg_bool))
-            checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
-
-            toggle_row_box.addWidget(checkbox)
         
-
-        for col in range(len(self.parameters)):
-            checkbox = QCheckBox("{}".format(self.parameters[col]))
-            checkbox.setChecked(True)
-            checkbox.toggled.connect(lambda checked, c=col: self.table.setColumnHidden(c, not checked))
-            checkbox.toggled.connect(lambda checked, k="{}".format(self.parameters[col]): self.dict_reg_bool.update({k: checked}))
-            # checkbox.toggled.connect(lambda checked: print(self.dict_reg_bool))
-            checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
-            toggle_col_box.addWidget(checkbox)
-
-        combo = QComboBox()
-        combo.addItems(["Normal IMon", "IMon Inzoom"])
-        combo.currentIndexChanged.connect(self.__vme.setImonZoom)
-        toggle_row_box.addWidget(combo)
-        
-        toggle_layout.addLayout(toggle_row_box)
-        toggle_layout.addLayout(toggle_col_box)
 
         # self.col_box = QHBoxLayout()
         # self.layout.addLayout(self.col_box)
@@ -152,7 +140,48 @@ class DataMonitor(QMainWindow):
             button.clicked.connect(self.toggle_button_state)
             self.table.setCellWidget(row, target_col_index, button)
         
+        for row in range(6):
+            checkbox = QCheckBox("CH{}".format(row))
+            checkbox.setChecked(True)
+            checkbox.toggled.connect(lambda checked, r=row: self.table.setRowHidden(r, not checked))
+            checkbox.toggled.connect(lambda checked, k="CH{}".format(row): self.dict_reg_bool.update({k: checked}))
+            # checkbox.toggled.connect(lambda checked: print(self.dict_reg_bool))
+            checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
+            checkbox.toggled.connect(lambda checked, r=row: logging.info(f"CH{r} logging :  {checked}"))
 
+            toggle_row_box.addWidget(checkbox)
+        
+
+        for col in range(len(self.parameters)):
+            checkbox = QCheckBox("{}".format(self.parameters[col]))
+            checkbox.setChecked(True)
+            checkbox.toggled.connect(lambda checked, c=col: self.table.setColumnHidden(c, not checked))
+            checkbox.toggled.connect(lambda checked, k="{}".format(self.parameters[col]): self.dict_reg_bool.update({k: checked}))
+            # checkbox.toggled.connect(lambda checked: print(self.dict_reg_bool))
+            checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
+            checkbox.toggled.connect(lambda checked, name=self.parameters[col]: logging.info(f"{name} logging :  {checked}"))
+
+            toggle_col_box.addWidget(checkbox)
+
+        if(self.__is_inzoomed):
+            imon_key = "IMonL"
+        else:
+            imon_key = "IMonH"
+        for col in range(self.table.columnCount()):
+            if self.table.horizontalHeaderItem(col).text() == "VMON":
+                self.index_vmon_col = col
+            if self.table.horizontalHeaderItem(col).text() == imon_key:
+                self.index_imon_col = col
+            if self.table.horizontalHeaderItem(col).text() == "Status":
+                self.index_status_col = col
+
+        combo = QComboBox()
+        combo.addItems(["IMon Inzoom", "Normal IMon"])
+        combo.currentIndexChanged.connect(self.__vme.setImonZoom)
+        toggle_row_box.addWidget(combo)
+        
+        toggle_layout.addLayout(toggle_row_box)
+        toggle_layout.addLayout(toggle_col_box)
 
         
         self.chart_IMON = QChart()
@@ -205,8 +234,12 @@ class DataMonitor(QMainWindow):
                 self.all_vmon_series[i_ch].attachAxis(self.axis_y_VMON)
             
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.VME_Run)
-        # self.timer.timeout.connect(self.Random_run)
+        
+        if(is_test):
+            self.timer.timeout.connect(self.Random_run)
+        else:
+            self.timer.timeout.connect(self.VME_Run)
+        
         # self.timer.start(1000)
         self.timer.start(1)
         
@@ -255,9 +288,24 @@ class DataMonitor(QMainWindow):
                 item.setBackground(self.colors_para[param])
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.table.setItem(row, col, item)
+        
+        time.sleep(0.1)
+
+        
 
     def DataTaking(self,):
         self.reg_map = self.__vme.convert_register_map()
+
+
+    def combo_func(self,):
+        if(self.__is_inzoomed):
+            temp_index = self.parameters.index("IMonH")
+            self.parameters[temp_index] = "IMonL"
+            self.table.setHorizontalHeaderItem(self.index_imon_col, QTableWidgetItem("IMonL"))
+        else :
+            temp_index = self.parameters.index("IMonL")
+            self.parameters[temp_index] = "IMonH"
+            self.table.setHorizontalHeaderItem(self.index_imon_col, QTableWidgetItem("IMonH"))
 
 
     def VME_Run(self):
@@ -268,6 +316,7 @@ class DataMonitor(QMainWindow):
         self.time_counter += 1
         before_readout = datetime.now()
         self.DataTaking()
+        
         after_readout = datetime.now()
         time_diff = after_readout-before_readout
         # print("eachtime diff : {}".format(time_diff))
@@ -424,18 +473,40 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para[param])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table.setItem(row, col, item)
+        
+        
+        for row in range(self.table.rowCount()):
+            mych = self.table.verticalHeaderItem(row).text()
+            mych_vmon_val = self.table.item(row, self.index_vmon_col).text()
+            mych_imon_val = self.table.item(row, self.index_imon_col).text()
+            mych_status_val = self.table.item(row, self.index_status_col).text()
+            
+            mylog_message = "{},  VMON,  {}".format(mych,mych_vmon_val)
+            logging.info(mylog_message)
+            mylog_message = "{},  IMon,  {}".format(mych,mych_imon_val)
+            logging.info(mylog_message)
+            mylog_message = "{},  Status,  {}".format(mych,mych_status_val)
+            logging.info(mylog_message)
 
 
 
     def toggle_button_state(self,):
         button = self.sender()
+        key = None
+        for row in range(self.table.rowCount()):
+            if self.table.cellWidget(row, 1) == button:
+                channel_name = self.table.verticalHeaderItem(row).text()
+                key = "{}_PW".format(channel_name)
+                break
+        
         if button.text() == "ON":
             button.setText("OFF")
             button.setStyleSheet("background-color: red; color: white;")
+            self.__vme.write_pw(key,0)
         else:
             button.setText("ON")
             button.setStyleSheet("background-color: green; color: white;")
-
+            self.__vme.write_pw(key,1)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

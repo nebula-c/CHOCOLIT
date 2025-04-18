@@ -10,7 +10,7 @@ class VME_READ():
     __vme_base_address = int("01230000", 16)
     __address_modifier = vme.AddressModifiers["A32_U_DATA"]
     __data_width = vme.DataWidth["D16"]
-    __imon_zoom = False
+    __imon_zoom = True
     
     device: vme.Device
     
@@ -30,10 +30,6 @@ class VME_READ():
     def opendevice(self,):
         device = vme.Device.open(vme.BoardType[self.__boardtype], self.__linknumber, self.__conetnode)
 
-    def test(self,):
-        a = self.__vme_base_address
-        print(a)
-
     def read_cycle(self,address):
         try:
             value = self.device.read_cycle(self.__vme_base_address | address, self.__address_modifier, self.__data_width)
@@ -46,8 +42,15 @@ class VME_READ():
         converted = {}
         for key, address in self.register_map.items():
             converted[key] = self.read_cycle(address)
-        # print(converted)
         return converted
+
+    def write_pw(self,mych_address,val):
+        address = self.register_map[mych_address]
+        try:
+            self.device.write_cycle(self.__vme_base_address | address, val, self.__address_modifier, self.__data_width)
+        except vme.Error as ex:
+            print(f'Failed: {ex}')
+
 
     def setImonZoom(self,):
         if(self.__imon_zoom):
@@ -76,12 +79,10 @@ class VME_READ():
             for k in keys_to_remove:
                 del self.register_map[k]
 
-        print(self.register_map)
+        # print(self.register_map)
     
     def write_cycle(self,address,val_01):
         try:
             self.device.write_cycle(self.__vme_base_address | address, val_01, self.__address_modifier, self.__data_width)
         except vme.Error as ex:
             print(f'Failed: {ex}')
-
-

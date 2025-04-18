@@ -11,7 +11,7 @@ def main():
     log_filename = "HV_log_{}.txt".format(now)
 
     app = QApplication(sys.argv)
-    monitor = chocolit.DataMonitor(log_filename)
+    monitor = chocolit.DataMonitor(log_filename,testmode=True)
     monitor.show()
     sys.exit(app.exec())
 
