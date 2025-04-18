@@ -17,15 +17,17 @@ class VME_READ():
     
     def __init__(self,):
         try:
-            self.device = vme.Device.open(vme.BoardType[self.__boardtype], self.__linknumber, self.__conetnode)
+            from caen_libs import caenvme as vme
+            self.vme = vme
+            self.device = self.vme.Device.open(self.vme.BoardType[self.__boardtype], self.__linknumber, self.__conetnode)
             self.__init_success = True
             self.register_map = copy.deepcopy(REGISTER_MAP)
             
-            from caen_libs import caenvme as vme
-            self.__address_modifier = vme.AddressModifiers["A32_U_DATA"]
-            self.__data_width = vme.DataWidth["D16"]
             
-            self.device: vme.Device
+            self.__address_modifier = self.vme.AddressModifiers["A32_U_DATA"]
+            self.__data_width = self.vme.DataWidth["D16"]
+            
+            self.device: self.vme.Device
         except:
             self.__init_success = False
             
@@ -40,12 +42,12 @@ class VME_READ():
         self.__conetnode = myconetnode
     
     def opendevice(self,):
-        device = vme.Device.open(vme.BoardType[self.__boardtype], self.__linknumber, self.__conetnode)
+        device = self.vme.Device.open(self.vme.BoardType[self.__boardtype], self.__linknumber, self.__conetnode)
 
     def read_cycle(self,address):
         try:
             value = self.device.read_cycle(self.__vme_base_address | address, self.__address_modifier, self.__data_width)
-        except vme.Error as ex:
+        except self.vme.Error as ex:
             print(f'Failed: {ex}')
             return
         return value
@@ -65,7 +67,7 @@ class VME_READ():
             address = self.register_map[mych_address]
             try:
                 self.device.write_cycle(self.__vme_base_address | address, val, self.__address_modifier, self.__data_width)
-            except vme.Error as ex:
+            except self.vme.Error as ex:
                 print(f'Failed: {ex}')
         else:
             return
@@ -109,5 +111,5 @@ class VME_READ():
     def write_cycle(self,address,val_01):
         try:
             self.device.write_cycle(self.__vme_base_address | address, val_01, self.__address_modifier, self.__data_width)
-        except vme.Error as ex:
+        except self.vme.Error as ex:
             print(f'Failed: {ex}')
