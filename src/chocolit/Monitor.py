@@ -13,20 +13,14 @@ import logging
 import time
 
 
-# from .vme_read import VME_READ
+from .vme_read import VME_READ
 
 
 class DataMonitor(QMainWindow):
-    # if(is_test):
-
-    # else:    
-    # if(not self.is_test):
-    #     from .vme_read import VME_READ
-    #     __vme = VME_READ()
-    #     reg_map = __vme.convert_register_map()
     
-    __vme = None
-    reg_map = None
+    __vme = VME_READ()
+    reg_map = __vme.convert_register_map()
+    
     __is_inzoomed = True
     index_vmon_col = -1
     index_imon_col = -1
@@ -39,11 +33,6 @@ class DataMonitor(QMainWindow):
             format="%(asctime)s, %(message)s"
         )
         self.is_test=testmode
-        
-        if(not self.is_test):
-            from .vme_read import VME_READ
-            self.__vme = VME_READ()
-            self.reg_map = __vme.convert_register_map()
 
 
         
@@ -249,7 +238,7 @@ class DataMonitor(QMainWindow):
             
         self.timer = QTimer(self)
         
-        if(is_test):
+        if(self.is_test):
             self.timer.timeout.connect(self.Random_run)
         else:
             self.timer.timeout.connect(self.VME_Run)
