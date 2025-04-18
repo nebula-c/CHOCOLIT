@@ -8,7 +8,7 @@ class VME_READ():
     __linknumber = 21475
     __conetnode = 0
     __vme_base_address = int("01230000", 16)
-    __address_modifier = vme.AddressModifiers["A32_U_DATA"]
+    # __address_modifier = vme.AddressModifiers["A32_U_DATA"]
     __data_width = vme.DataWidth["D16"]
     __imon_zoom = True
     __init_success = False
@@ -20,6 +20,7 @@ class VME_READ():
             self.device = vme.Device.open(vme.BoardType[self.__boardtype], self.__linknumber, self.__conetnode)
             self.__init_success = True
             self.register_map = copy.deepcopy(REGISTER_MAP)
+            self.__address_modifier = vme.AddressModifiers["A32_U_DATA"]
         except:
             self.__init_success = False
             
