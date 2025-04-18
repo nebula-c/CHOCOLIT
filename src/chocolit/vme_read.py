@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from caen_libs import caenvme as vme
+# from caen_libs import caenvme as vme
 from .register_map import REGISTER_MAP
 import copy
 
@@ -13,15 +13,19 @@ class VME_READ():
     __imon_zoom = True
     __init_success = False
     
-    device: vme.Device
+    # device: vme.Device
     
     def __init__(self,):
         try:
             self.device = vme.Device.open(vme.BoardType[self.__boardtype], self.__linknumber, self.__conetnode)
             self.__init_success = True
             self.register_map = copy.deepcopy(REGISTER_MAP)
+            
+            from caen_libs import caenvme as vme
             self.__address_modifier = vme.AddressModifiers["A32_U_DATA"]
             self.__data_width = vme.DataWidth["D16"]
+            
+            self.device: vme.Device
         except:
             self.__init_success = False
             
