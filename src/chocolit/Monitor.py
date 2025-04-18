@@ -13,12 +13,17 @@ import logging
 import time
 
 
-from .vme_read import VME_READ
+# from .vme_read import VME_READ
 
 
 class DataMonitor(QMainWindow):
-    __vme = VME_READ()
-    reg_map = __vme.convert_register_map()
+    # if(is_test):
+
+    # else:    
+    if(not is_test):
+        from .vme_read import VME_READ
+        __vme = VME_READ()
+        reg_map = __vme.convert_register_map()
     __is_inzoomed = True
     index_vmon_col = -1
     index_imon_col = -1
