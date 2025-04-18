@@ -287,12 +287,35 @@ class DataMonitor(QMainWindow):
         for row in range(len(self.channels)):
             for col, param in enumerate(self.parameters):
                 value = round(random.uniform(0, 100), 2)
+
+                # existing_item = self.table.item(row, col)
+                # if existing_item is None or existing_item.text() != str(value):
+                #     item = QTableWidgetItem(str(value))
+                #     item.setBackground(self.colors_para[param])
+                #     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                #     self.table.setItem(row, col, item)
+                
+                
                 item = QTableWidgetItem(str(value))
                 item.setBackground(self.colors_para[param])
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.table.setItem(row, col, item)
         
-        time.sleep(0.1)
+        
+        for row in range(self.table.rowCount()):
+            mych = self.table.verticalHeaderItem(row).text()
+            mych_vmon_val = self.table.item(row, self.index_vmon_col).text()
+            mych_imon_val = self.table.item(row, self.index_imon_col).text()
+            mych_status_val = self.table.item(row, self.index_status_col).text()
+            
+            mylog_message = "{},  VMON,  {}".format(mych,mych_vmon_val)
+            logging.info(mylog_message)
+            mylog_message = "{},  IMon,  {}".format(mych,mych_imon_val)
+            logging.info(mylog_message)
+            mylog_message = "{},  Status,  {}".format(mych,mych_status_val)
+            logging.info(mylog_message)
+
+        time.sleep(1)
 
         
 
