@@ -38,7 +38,7 @@ class DataMonitor(QMainWindow):
             level=logging.INFO,
             format="%(asctime)s, %(message)s"
         )
-        is_test=testmode
+        self.is_test=testmode
         
         if(not self.is_test):
             from .vme_read import VME_READ
