@@ -302,18 +302,41 @@ class DataMonitor(QMainWindow):
                 self.table.setItem(row, col, item)
         
         
-        for row in range(self.table.rowCount()):
-            mych = self.table.verticalHeaderItem(row).text()
-            mych_vmon_val = self.table.item(row, self.index_vmon_col).text()
-            mych_imon_val = self.table.item(row, self.index_imon_col).text()
-            mych_status_val = self.table.item(row, self.index_status_col).text()
+        # for row in range(self.table.rowCount()):
+        #     mych = self.table.verticalHeaderItem(row).text()
+        #     mych_vmon_val = self.table.item(row, self.index_vmon_col).text()
+        #     mych_imon_val = self.table.item(row, self.index_imon_col).text()
+        #     mych_status_val = self.table.item(row, self.index_status_col).text()
             
-            mylog_message = "{},  VMON,  {}".format(mych,mych_vmon_val)
-            logging.info(mylog_message)
-            mylog_message = "{},  IMon,  {}".format(mych,mych_imon_val)
-            logging.info(mylog_message)
-            mylog_message = "{},  Status,  {}".format(mych,mych_status_val)
-            logging.info(mylog_message)
+        #     mylog_message = "{},  VMON,  {}".format(mych,mych_vmon_val)
+        #     logging.info(mylog_message)
+        #     mylog_message = "{},  IMon,  {}".format(mych,mych_imon_val)
+        #     logging.info(mylog_message)
+        #     mylog_message = "{},  Status,  {}".format(mych,mych_status_val)
+        #     logging.info(mylog_message)
+
+
+        for ch_key, ch_enabled in self.dict_reg_bool.items():
+            if ch_key.startswith("CH") and ch_enabled:
+                ch_index = int(ch_key[2:])
+                mych = ch_key
+
+                if self.dict_reg_bool.get("VMON", False):
+                    vmon_val = self.table.item(ch_index, self.index_vmon_col).text()
+                    logging.info(f"{mych},  VMON,  {vmon_val}")
+
+                if self.dict_reg_bool.get("IMonH", False):
+                    imonh_val = self.table.item(ch_index, self.index_imon_col).text()
+                    logging.info(f"{mych},  IMonH,  {imonh_val}")
+
+                if self.dict_reg_bool.get("IMonL", False):
+                    imonl_val = self.table.item(ch_index, self.index_imon_col).text()
+                    logging.info(f"{mych},  IMonL,  {imonl_val}")
+
+                if self.dict_reg_bool.get("Status", False):
+                    status_val = self.table.item(ch_index, self.index_status_col).text()
+                    logging.info(f"{mych},  Status,  {status_val}")
+
 
         time.sleep(1)
 
@@ -501,19 +524,39 @@ class DataMonitor(QMainWindow):
                     self.table.setItem(row, col, item)
         
         
-        for row in range(self.table.rowCount()):
-            mych = self.table.verticalHeaderItem(row).text()
-            mych_vmon_val = self.table.item(row, self.index_vmon_col).text()
-            mych_imon_val = self.table.item(row, self.index_imon_col).text()
-            mych_status_val = self.table.item(row, self.index_status_col).text()
+        # for row in range(self.table.rowCount()):
+        #     mych = self.table.verticalHeaderItem(row).text()
+        #     mych_vmon_val = self.table.item(row, self.index_vmon_col).text()
+        #     mych_imon_val = self.table.item(row, self.index_imon_col).text()
+        #     mych_status_val = self.table.item(row, self.index_status_col).text()
             
-            mylog_message = "{},  VMON,  {}".format(mych,mych_vmon_val)
-            logging.info(mylog_message)
-            mylog_message = "{},  IMon,  {}".format(mych,mych_imon_val)
-            logging.info(mylog_message)
-            mylog_message = "{},  Status,  {}".format(mych,mych_status_val)
-            logging.info(mylog_message)
+        #     mylog_message = "{},  VMON,  {}".format(mych,mych_vmon_val)
+        #     logging.info(mylog_message)
+        #     mylog_message = "{},  IMon,  {}".format(mych,mych_imon_val)
+        #     logging.info(mylog_message)
+        #     mylog_message = "{},  Status,  {}".format(mych,mych_status_val)
+        #     logging.info(mylog_message)
 
+        for ch_key, ch_enabled in self.dict_reg_bool.items():
+            if ch_key.startswith("CH") and ch_enabled:
+                ch_index = int(ch_key[2:])
+                mych = ch_key
+
+                if self.dict_reg_bool.get("VMON", False):
+                    vmon_val = self.table.item(ch_index, self.index_vmon_col).text()
+                    logging.info(f"{mych},  VMON,  {vmon_val}")
+
+                if self.dict_reg_bool.get("IMonH", False):
+                    imonh_val = self.table.item(ch_index, self.index_imon_col).text()
+                    logging.info(f"{mych},  IMonH,  {imonh_val}")
+
+                if self.dict_reg_bool.get("IMonL", False):
+                    imonl_val = self.table.item(ch_index, self.index_imon_col).text()
+                    logging.info(f"{mych},  IMonL,  {imonl_val}")
+
+                if self.dict_reg_bool.get("Status", False):
+                    status_val = self.table.item(ch_index, self.index_status_col).text()
+                    logging.info(f"{mych},  Status,  {status_val}")
 
 
     def toggle_button_state(self,):
