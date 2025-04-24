@@ -14,6 +14,9 @@ class VME_READ():
     __init_success = False
     
     # device: vme.Device
+
+
+    
     
     def __init__(self,):
         try:
@@ -21,13 +24,33 @@ class VME_READ():
             self.vme = vme
             self.device = self.vme.Device.open(self.vme.BoardType[self.__boardtype], self.__linknumber, self.__conetnode)
             self.__init_success = True
-            self.register_map = copy.deepcopy(REGISTER_MAP)
+            register_map = copy.deepcopy(REGISTER_MAP)
             
             
             self.__address_modifier = self.vme.AddressModifiers["A32_U_DATA"]
             self.__data_width = self.vme.DataWidth["D16"]
             
             self.device: self.vme.Device
+
+            self.rapid_reg_map = {
+                k: copy.deepcopy(v)
+                for k, v in register_map.items()
+                if any(substr in k for substr in ["MON", "Mon", "Status"])
+
+            }
+            self.once_reg_map = {
+                k: copy.deepcopy(v)
+                for k, v in register_map.items()
+                if any(substr in k for substr in ["ImonRange", "Polarity"])
+
+            }
+            self.slow_reg_map = {
+                k: copy.deepcopy(v)
+                for k, v in register_map.items()
+                if not any(substr in k for substr in ["MON", "Mon", "Status","ImonRange", "Polarity"])
+            }
+
+            
         except:
             self.__init_success = False
             
@@ -52,19 +75,45 @@ class VME_READ():
             return
         return value
     
-    def convert_register_map(self,):
+    # def convert_register_map(self,):
+    #     if(self.__init_success):
+    #         converted = {}
+    #         for key, address in self.register_map.items():
+    #             converted[key] = self.read_cycle(address)
+    #         return converted
+    #     else:
+    #         return
+    
+    def Get_data_rapid(self,):
         if(self.__init_success):
             converted = {}
-            for key, address in self.register_map.items():
+            for key, address in self.rapid_reg_map.items():
+                converted[key] = self.read_cycle(address)
+            return converted
+        else:
+            return
+    
+    def Get_data_slow(self,):
+        if(self.__init_success):
+            converted = {}
+            for key, address in self.slow_reg_map.items():
                 converted[key] = self.read_cycle(address)
             return converted
         else:
             return
             
+    def Get_data_once(self,):
+        if(self.__init_success):
+            converted = {}
+            for key, address in self.once_reg_map.items():
+                converted[key] = self.read_cycle(address)
+            return converted
+        else:
+            return
 
     def write_pw(self,mych_address,val):
         if(self.__init_success):
-            address = self.register_map[mych_address]
+            address = self.slow_reg_map[mych_address]
             try:
                 self.device.write_cycle(self.__vme_base_address | address, val, self.__address_modifier, self.__data_width)
             except self.vme.Error as ex:
@@ -79,7 +128,7 @@ class VME_READ():
                 self.__imon_zoom = False
                 for i_ch in range(6):
                     try:
-                        self.write_cycle(self.register_map["CH{}_ImonRange".format(i_ch)],0x0000)
+                        self.write_cycle(self.once_reg_map["CH{}_ImonRange".format(i_ch)],0x0000)
                     except ValueError as e:
                         print(f"Error: {e}")
                         continue
@@ -88,7 +137,7 @@ class VME_READ():
                 self.__imon_zoom = True
                 for i_ch in range(6):
                     try:
-                        self.write_cycle(self.register_map["CH{}_ImonRange".format(i_ch)],0x001)
+                        self.write_cycle(self.once_reg_map["CH{}_ImonRange".format(i_ch)],0x001)
                     except ValueError as e:
                         print(f"Error: {e}")
                         continue
@@ -97,16 +146,34 @@ class VME_READ():
 
     def modi_reg_map(self,bool_map):
         if(self.__init_success):
-            self.register_map = copy.deepcopy(REGISTER_MAP)
+            register_map = copy.deepcopy(REGISTER_MAP)
             false_keys = [k for k, v in bool_map.items() if v is False]
             for fk in false_keys:
-                keys_to_remove = [k for k in self.register_map if fk in k]
+                keys_to_remove = [k for k in register_map if fk in k]
                 for k in keys_to_remove:
-                    del self.register_map[k]
+                    del register_map[k]
+
+
+            self.rapid_reg_map = {
+                k: copy.deepcopy(v)
+                for k, v in register_map.items()
+                if any(substr in k for substr in ["MON", "Mon", "Status"])
+
+            }
+            self.once_reg_map = {
+                k: copy.deepcopy(v)
+                for k, v in register_map.items()
+                if any(substr in k for substr in ["ImonRange", "Polarity"])
+
+            }
+            self.slow_reg_map = {
+                k: copy.deepcopy(v)
+                for k, v in register_map.items()
+                if not any(substr in k for substr in ["MON", "Mon", "Status","ImonRange", "Polarity"])
+            }
         else:
             return
 
-        # print(self.register_map)
     
     def write_cycle(self,address,val_01):
         try:
