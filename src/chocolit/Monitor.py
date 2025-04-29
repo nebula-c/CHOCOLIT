@@ -41,11 +41,12 @@ class DataMonitor(QMainWindow):
         
         
         self.channels = [f"CH{i}" for i in range(6)]
-        # self.parameters = ["VMON", "IMON", "ISET", "VSET", "RampUp", "RampDown", "Temperature"]
         self.parameters = ["Polarity", "PW", "IMonH", "IMonL", "VMON", "ISet", "VSet", "RUp", "RDwn", "Temp", "Trip", "Status"]
-        keys = self.channels + self.parameters
+        self.mon_parameters = ["Polarity", "PW", "IMonH", "IMonL", "VMON","Status"]
+        self.set_parameters = ["ISet", "VSet", "RUp", "RDwn", "Temp", "Trip"]
+        # keys = self.channels + self.parameters
+        keys = self.channels + self.mon_parameters + self.set_parameters
         self.dict_reg_bool = {key: True for key in keys}
-        # self.colors = [QColor(255, 0, 0), QColor(255, 0, 0), QColor(255, 0, 0), QColor(255, 0, 0), QColor(255, 0, 0), QColor(255, 0, 0),QColor(255, 0, 0)]
         self.colors_para = {param: QColor(240,240,225) for param in self.parameters}
         
         self.central_widget = QWidget()
@@ -58,14 +59,12 @@ class DataMonitor(QMainWindow):
         pixmap_L = QPixmap(logo_path)
         scaled_pixmap_L = pixmap_L.scaled(1000, 100, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         logo_label_L.setPixmap(scaled_pixmap_L)
-        # self.layout.addWidget(logo_label_L)
 
         logo_label_R = QLabel()
         logo_path = pkg_resources.resource_filename('chocolit', 'images/Logo_letters_L.png')
         pixmap_R = QPixmap(logo_path)
         scaled_pixmap_R = pixmap_R.scaled(1000, 100, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         logo_label_R.setPixmap(scaled_pixmap_R)
-        # self.layout.addWidget(logo_label_R)
 
         logo_layout.addSpacing(20)
         logo_layout.addWidget(logo_label_L)
@@ -104,40 +103,84 @@ class DataMonitor(QMainWindow):
 
 
 
+        ### ---------------------------------------------
+        ### TABLE
+        ### ---------------------------------------------
+        self.table_layout = QHBoxLayout()
+        self.table_layout.setSpacing(0)  # 테이블 간의 간격 없애기
 
-        self.table = QTableWidget(len(self.channels), len(self.parameters))
-        self.table.setHorizontalHeaderLabels(self.parameters)
-        self.table.setVerticalHeaderLabels(self.channels)
-        self.table.setFixedHeight(210)
+        self.layout.addLayout(self.table_layout)
+        self.table_layout.setContentsMargins(0, 0, 0, 0)
 
-        column_width = self.table.viewport().width() // self.table.columnCount()
-        for row in range(self.table.columnCount()):
-            self.table.setColumnWidth(row, column_width)
+        # self.table_mon = QTableWidget(len(self.channels), len(self.parameters))
+        self.table_mon = QTableWidget(len(self.channels), len(self.mon_parameters))
+        self.table_mon.setHorizontalHeaderLabels(self.mon_parameters)
+        self.table_mon.setVerticalHeaderLabels(self.channels)
+        self.table_mon.setFixedHeight(210)
+
+        self.table_mon.setStyleSheet("""
+            QTableWidget {
+                border-left: none;
+                border-top: none;
+                border-right: 1px solid #000;
+                border-bottom: none;
+            }
+        """)
+
+        column_width = self.table_mon.viewport().width() // self.table_mon.columnCount()
+        for row in range(self.table_mon.columnCount()):
+            self.table_mon.setColumnWidth(row, column_width)
         
-        self.layout.addWidget(self.table)
-        self.table.setStyleSheet("QTableWidget { border: none; }")
-        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.table_mon.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table_mon.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.table_layout.addWidget(self.table_mon)
+
+        self.table_set = QTableWidget(len(self.channels), len(self.set_parameters))
+        self.table_set.setHorizontalHeaderLabels(self.set_parameters)
+        self.table_set.setVerticalHeaderLabels(self.channels)
+        self.table_set.verticalHeader().setVisible(False)
+        self.table_set.setFixedHeight(210)
+
+
+        self.table_set.setStyleSheet("""
+            QTableWidget {
+                border-left: 1px solid #000;
+                border-top: none;
+                border-right: none;
+                border-bottom: none;
+            }
+        """)
+
+        column_width = self.table_set.viewport().width() // self.table_set.columnCount()
+        for row in range(self.table_set.columnCount()):
+            self.table_set.setColumnWidth(row, column_width)
         
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        
+        self.table_set.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table_set.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.table_layout.addWidget(self.table_set)
+
+        self.table_layout.setContentsMargins(0, 0, 0, 0)
+
+        ### ---------------------------------------------
+        ### BUTTON-table_mon
+        ### ---------------------------------------------
         target_col_index = self.parameters.index("PW")
-        for row in range(self.table.rowCount()):
+        for row in range(self.table_mon.rowCount()):
             button = QPushButton("OFF")
             button.setStyleSheet("background-color: red; color: white;")
             button.clicked.connect(self.toggle_button_state)
-            self.table.setCellWidget(row, target_col_index, button)
+            self.table_mon.setCellWidget(row, target_col_index, button)
         
-        # self.table.cellChanged.connect()
-        
-        
-        
+
+        ### ---------------------------------------------
+        ### CHECK BOX
+        ### ---------------------------------------------
         for row in range(6):
             checkbox = QCheckBox("CH{}".format(row))
             checkbox.setChecked(True)
-            checkbox.toggled.connect(lambda checked, r=row: self.table.setRowHidden(r, not checked))
+            checkbox.toggled.connect(lambda checked, r=row: self.table_mon.setRowHidden(r, not checked))
+            checkbox.toggled.connect(lambda checked, r=row: self.table_set.setRowHidden(r, not checked))
             checkbox.toggled.connect(lambda checked, k="CH{}".format(row): self.dict_reg_bool.update({k: checked}))
-            # checkbox.toggled.connect(lambda checked: print(self.dict_reg_bool))
             checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
             checkbox.toggled.connect(lambda checked, r=row: logging.info(f"CH{r} logging :  {checked}"))
             checkbox.toggled.connect(lambda checked: setattr(self, 'row_channels', [k for k, v in self.dict_reg_bool.items() if v and "CH" in k]))
@@ -146,12 +189,12 @@ class DataMonitor(QMainWindow):
             toggle_row_box.addWidget(checkbox)
         
 
-        for col in range(len(self.parameters)):
-            checkbox = QCheckBox("{}".format(self.parameters[col]))
+        for col in range(len(self.mon_parameters+self.set_parameters)):
+            checkbox = QCheckBox("{}".format((self.mon_parameters+self.set_parameters)[col]))
             checkbox.setChecked(True)
-            checkbox.toggled.connect(lambda checked, c=col: self.table.setColumnHidden(c, not checked))
+            checkbox.toggled.connect(lambda checked, c=col: self.table_mon.setColumnHidden(c, not checked))
+            checkbox.toggled.connect(lambda checked, c=col: self.table_set.setColumnHidden(c-self.table_mon.rowCount(), not checked))
             checkbox.toggled.connect(lambda checked, k="{}".format(self.parameters[col]): self.dict_reg_bool.update({k: checked}))
-            # checkbox.toggled.connect(lambda checked: print(self.dict_reg_bool))
             checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
             checkbox.toggled.connect(lambda checked, name=self.parameters[col]: logging.info(f"{name} logging :  {checked}"))
 
@@ -159,11 +202,17 @@ class DataMonitor(QMainWindow):
             toggle_col_box.addWidget(checkbox)
         
         
-        self.col_headers = [self.table.horizontalHeaderItem(i).text() for i in range(self.table.columnCount())]
-        # self.row_channels = [self.table.verticalHeaderItem(i).text() for i in range(self.table.rowCount())]
+        self.col_headers = (
+        [self.table_mon.horizontalHeaderItem(i).text() for i in range(self.table_mon.columnCount())]
+         + [self.table_set.horizontalHeaderItem(i).text() for i in range(self.table_set.columnCount())]
+        )
         self.row_channels = ch_true_keys = [k for k, v in self.dict_reg_bool.items() if v and "CH" in k]
 
 
+
+        ### ---------------------------------------------
+        ### COMBO BOX
+        ### ---------------------------------------------
         combo = QComboBox()
         combo.addItems(["IMon Inzoom", "Normal IMon"])
         combo.currentIndexChanged.connect(self.__vme.setImonZoom)
@@ -171,6 +220,11 @@ class DataMonitor(QMainWindow):
         
         toggle_layout.addLayout(toggle_row_box)
         toggle_layout.addLayout(toggle_col_box)
+
+
+
+
+
 
         self.DataTaking_once()
         
@@ -184,66 +238,101 @@ class DataMonitor(QMainWindow):
             else:
                 value = "ERROR"
             
-            existing_item = self.table.item(self.row_channels.index(ch), self.col_headers.index("Polarity"))
+            existing_item = self.table_mon.item(self.row_channels.index(ch), self.col_headers.index("Polarity"))
             if existing_item is None or existing_item.text() != str(value):
                 item = QTableWidgetItem(str(value))
                 item.setBackground(self.colors_para["Polarity"])
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                self.table.setItem(self.row_channels.index(ch), self.col_headers.index("Polarity"), item)
+                self.table_mon.setItem(self.row_channels.index(ch), self.col_headers.index("Polarity"), item)
+
+
+        ### ---------------------------------------------
+        ### TERMINAL
+        ### ---------------------------------------------
+        # self.terminal_input = QLineEdit(self)
+        # self.terminal_input.returnPressed.connect(self.on_return_pressed)
+        # self.terminal_input.setPlaceholderText("Ex: 'ch0/vest 20'")
+        # self.terminal_input.setStyleSheet("""
+        #     QLineEdit {
+        #         background-color: #1e1e1e;
+        #         color: #d4d4d4;
+        #         border: 1px solid #3c3c3c;
+        #         padding: 4px;
+        #         font-family: Consolas;
+        #         font-size: 14px;
+        #     }
+        # """)
+        self.terminal_output = QPlainTextEdit(self)
+        self.terminal_output.setReadOnly(True)
+        self.terminal_output.setStyleSheet("""
+            QPlainTextEdit {
+                background-color: #d4d4d4;
+                color: #1e1e1e;
+                border: none;
+                padding: 6px;
+                font-family: Consolas;
+                font-size: 14px;
+            }
+        """)
+
+        self.layout.addWidget(self.terminal_output)
+        # self.layout.addWidget(self.terminal_input)
+        self.layout.setContentsMargins(0, 0, 0, 20)
 
 
 
-
-
-        self.chart_IMON = QChart()
-        self.chart_IMON.setTitle("IMON")
-        self.chart_IMON_view = QChartView(self.chart_IMON)
-        self.layout.addWidget(self.chart_IMON_view)
+        ### ---------------------------------------------
+        ### CHART
+        ### ---------------------------------------------
+        # self.chart_IMON = QChart()
+        # self.chart_IMON.setTitle("IMON")
+        # self.chart_IMON_view = QChartView(self.chart_IMON)
+        # self.layout.addWidget(self.chart_IMON_view)
         
-        self.chart_VMON = QChart()
-        self.chart_VMON.setTitle("VMON")
-        self.chart_VMON_view = QChartView(self.chart_VMON)
-        self.layout.addWidget(self.chart_VMON_view)
+        # self.chart_VMON = QChart()
+        # self.chart_VMON.setTitle("VMON")
+        # self.chart_VMON_view = QChartView(self.chart_VMON)
+        # self.layout.addWidget(self.chart_VMON_view)
 
-        self.axis_x_IMON = QValueAxis()
-        self.axis_x_IMON.setTitleText("Time")
-        self.axis_x_IMON.setRange(0, 10)
-        self.chart_IMON.addAxis(self.axis_x_IMON, Qt.AlignmentFlag.AlignBottom)
+        # self.axis_x_IMON = QValueAxis()
+        # self.axis_x_IMON.setTitleText("Time")
+        # self.axis_x_IMON.setRange(0, 10)
+        # self.chart_IMON.addAxis(self.axis_x_IMON, Qt.AlignmentFlag.AlignBottom)
 
-        self.axis_x_VMON = QValueAxis()
-        self.axis_x_VMON.setTitleText("Time")
-        self.axis_x_VMON.setRange(0, 10)
-        self.chart_VMON.addAxis(self.axis_x_VMON, Qt.AlignmentFlag.AlignBottom)
+        # self.axis_x_VMON = QValueAxis()
+        # self.axis_x_VMON.setTitleText("Time")
+        # self.axis_x_VMON.setRange(0, 10)
+        # self.chart_VMON.addAxis(self.axis_x_VMON, Qt.AlignmentFlag.AlignBottom)
         
-        self.axis_y_IMON = QValueAxis()
-        self.axis_y_IMON.setTitleText("Value")
-        self.axis_y_IMON.setRange(0, 10)
-        self.chart_IMON.addAxis(self.axis_y_IMON, Qt.AlignmentFlag.AlignLeft)
+        # self.axis_y_IMON = QValueAxis()
+        # self.axis_y_IMON.setTitleText("Value")
+        # self.axis_y_IMON.setRange(0, 10)
+        # self.chart_IMON.addAxis(self.axis_y_IMON, Qt.AlignmentFlag.AlignLeft)
         
-        self.axis_y_VMON = QValueAxis()
-        self.axis_y_VMON.setTitleText("Value")
-        self.axis_y_VMON.setRange(0, 10)
-        self.chart_VMON.addAxis(self.axis_y_VMON, Qt.AlignmentFlag.AlignLeft)
+        # self.axis_y_VMON = QValueAxis()
+        # self.axis_y_VMON.setTitleText("Value")
+        # self.axis_y_VMON.setRange(0, 10)
+        # self.chart_VMON.addAxis(self.axis_y_VMON, Qt.AlignmentFlag.AlignLeft)
         
 
-        self.all_imon_series = []
-        self.all_vmon_series = []
-        for i_ch in range(0,6):
-            if self.dict_reg_bool[self.channels[i_ch]]:
-                imon_series = QLineSeries()
-                vmon_series = QLineSeries()
-                imon_series.setName("IMON")
-                vmon_series.setName("VMON")    
-                self.chart_IMON.addSeries(imon_series)
-                self.chart_VMON.addSeries(vmon_series)
-                self.all_imon_series.append(imon_series)
-                self.all_vmon_series.append(vmon_series)
+        # self.all_imon_series = []
+        # self.all_vmon_series = []
+        # for i_ch in range(0,6):
+        #     if self.dict_reg_bool[self.channels[i_ch]]:
+        #         imon_series = QLineSeries()
+        #         vmon_series = QLineSeries()
+        #         imon_series.setName("IMON")
+        #         vmon_series.setName("VMON")    
+        #         self.chart_IMON.addSeries(imon_series)
+        #         self.chart_VMON.addSeries(vmon_series)
+        #         self.all_imon_series.append(imon_series)
+        #         self.all_vmon_series.append(vmon_series)
 
-                self.all_imon_series[i_ch].attachAxis(self.axis_x_IMON)
-                self.all_imon_series[i_ch].attachAxis(self.axis_y_IMON)
-                self.all_vmon_series[i_ch].attachAxis(self.axis_x_VMON)
-                self.all_vmon_series[i_ch].attachAxis(self.axis_y_VMON)
+        #         self.all_imon_series[i_ch].attachAxis(self.axis_x_IMON)
+        #         self.all_imon_series[i_ch].attachAxis(self.axis_y_IMON)
+        #         self.all_vmon_series[i_ch].attachAxis(self.axis_x_VMON)
+        #         self.all_vmon_series[i_ch].attachAxis(self.axis_y_VMON)
             
         # self.timer = QTimer(self)
         
@@ -308,25 +397,25 @@ class DataMonitor(QMainWindow):
             for col, param in enumerate(self.parameters):
                 value = round(random.uniform(0, 100), 2)
 
-                # existing_item = self.table.item(row, col)
+                # existing_item = self.table_mon.item(row, col)
                 # if existing_item is None or existing_item.text() != str(value):
                 #     item = QTableWidgetItem(str(value))
                 #     item.setBackground(self.colors_para[param])
                 #     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                #     self.table.setItem(row, col, item)
+                #     self.table_mon.setItem(row, col, item)
                 
                 
                 item = QTableWidgetItem(str(value))
                 item.setBackground(self.colors_para[param])
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.table.setItem(row, col, item)
+                self.table_mon.setItem(row, col, item)
         
         
-        # for row in range(self.table.rowCount()):
-        #     mych = self.table.verticalHeaderItem(row).text()
-        #     mych_vmon_val = self.table.item(row, self.index_vmon_col).text()
-        #     mych_imon_val = self.table.item(row, self.index_imon_col).text()
-        #     mych_status_val = self.table.item(row, self.index_status_col).text()
+        # for row in range(self.table_mon.rowCount()):
+        #     mych = self.table_mon.verticalHeaderItem(row).text()
+        #     mych_vmon_val = self.table_mon.item(row, self.index_vmon_col).text()
+        #     mych_imon_val = self.table_mon.item(row, self.index_imon_col).text()
+        #     mych_status_val = self.table_mon.item(row, self.index_status_col).text()
             
         #     mylog_message = "{},  VMON,  {}".format(mych,mych_vmon_val)
         #     logging.info(mylog_message)
@@ -342,23 +431,23 @@ class DataMonitor(QMainWindow):
                 mych = ch_key
 
                 if self.dict_reg_bool.get("VMON", False):
-                    # vmon_val = self.table.item(ch_index, self.index_vmon_col).text()
-                    vmon_val = self.table.item(ch_index, self.col_headers.index("VMON")).text()
+                    # vmon_val = self.table_mon.item(ch_index, self.index_vmon_col).text()
+                    vmon_val = self.table_mon.item(ch_index, self.col_headers.index("VMON")).text()
                     logging.info(f"{mych},  VMON,  {vmon_val}")
 
                 if self.dict_reg_bool.get("IMonH", False):
-                    # imonh_val = self.table.item(ch_index, self.index_imon_col).text()
-                    imonh_val = self.table.item(ch_index, self.col_headers.index("IMonH")).text()
+                    # imonh_val = self.table_mon.item(ch_index, self.index_imon_col).text()
+                    imonh_val = self.table_mon.item(ch_index, self.col_headers.index("IMonH")).text()
                     logging.info(f"{mych},  IMonH,  {imonh_val}")
 
                 if self.dict_reg_bool.get("IMonL", False):
-                    # imonl_val = self.table.item(ch_index, self.index_imon_col).text()
-                    imonl_val = self.table.item(ch_index, self.col_headers.index("IMonL")).text()
+                    # imonl_val = self.table_mon.item(ch_index, self.index_imon_col).text()
+                    imonl_val = self.table_mon.item(ch_index, self.col_headers.index("IMonL")).text()
                     logging.info(f"{mych},  IMonL,  {imonl_val}")
 
                 if self.dict_reg_bool.get("Status", False):
-                    # status_val = self.table.item(ch_index, self.index_status_col).text()
-                    status_val = self.table.item(ch_index, self.col_headers.index("Status")).text()
+                    # status_val = self.table_mon.item(ch_index, self.index_status_col).text()
+                    status_val = self.table_mon.item(ch_index, self.col_headers.index("Status")).text()
                     logging.info(f"{mych},  Status,  {status_val}")
 
 
@@ -383,11 +472,11 @@ class DataMonitor(QMainWindow):
         if(self.__is_inzoomed):
             temp_index = self.parameters.index("IMonH")
             self.parameters[temp_index] = "IMonL"
-            self.table.setHorizontalHeaderItem(self.index_imon_col, QTableWidgetItem("IMonL"))
+            self.table_mon.setHorizontalHeaderItem(self.index_imon_col, QTableWidgetItem("IMonL"))
         else :
             temp_index = self.parameters.index("IMonL")
             self.parameters[temp_index] = "IMonH"
-            self.table.setHorizontalHeaderItem(self.index_imon_col, QTableWidgetItem("IMonH"))
+            self.table_mon.setHorizontalHeaderItem(self.index_imon_col, QTableWidgetItem("IMonH"))
 
 
     # def VME_Run(self):
@@ -449,7 +538,7 @@ class DataMonitor(QMainWindow):
     #                     elif param == "PW":
     #                         mykey = "CH{}_PW".format(row)
     #                         origin_val = self.reg_map[mykey]
-    #                         mybutton = self.table.cellWidget(row,col)
+    #                         mybutton = self.table_mon.cellWidget(row,col)
     #                         if origin_val == 0:
     #                             value = "OFF"
     #                             mybutton.setText("OFF")
@@ -541,21 +630,21 @@ class DataMonitor(QMainWindow):
     #                 # item = QTableWidgetItem(str(value))
     #                 # item.setBackground(self.colors_para[param])
     #                 # item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-    #                 # self.table.setItem(row, col, item)
+    #                 # self.table_mon.setItem(row, col, item)
 
-    #                 existing_item = self.table.item(row, col)
+    #                 existing_item = self.table_mon.item(row, col)
     #                 if existing_item is None or existing_item.text() != str(value):
     #                     item = QTableWidgetItem(str(value))
     #                     item.setBackground(self.colors_para[param])
     #                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-    #                     self.table.setItem(row, col, item)
+    #                     self.table_mon.setItem(row, col, item)
         
         
-    #     # for row in range(self.table.rowCount()):
-    #     #     mych = self.table.verticalHeaderItem(row).text()
-    #     #     mych_vmon_val = self.table.item(row, self.index_vmon_col).text()
-    #     #     mych_imon_val = self.table.item(row, self.index_imon_col).text()
-    #     #     mych_status_val = self.table.item(row, self.index_status_col).text()
+    #     # for row in range(self.table_mon.rowCount()):
+    #     #     mych = self.table_mon.verticalHeaderItem(row).text()
+    #     #     mych_vmon_val = self.table_mon.item(row, self.index_vmon_col).text()
+    #     #     mych_imon_val = self.table_mon.item(row, self.index_imon_col).text()
+    #     #     mych_status_val = self.table_mon.item(row, self.index_status_col).text()
             
     #     #     mylog_message = "{},  VMON,  {}".format(mych,mych_vmon_val)
     #     #     logging.info(mylog_message)
@@ -570,28 +659,28 @@ class DataMonitor(QMainWindow):
     #             mych = ch_key
 
     #             if self.dict_reg_bool.get("VMON", False):
-    #                 vmon_val = self.table.item(ch_index, self.col_headers.index("VMON")).text()
+    #                 vmon_val = self.table_mon.item(ch_index, self.col_headers.index("VMON")).text()
     #                 logging.info(f"{mych},  VMON,  {vmon_val}")
 
     #             if self.dict_reg_bool.get("IMonH", False):
-    #                 imonh_val = self.table.item(ch_index, self.col_headers.index("IMonH")).text()
+    #                 imonh_val = self.table_mon.item(ch_index, self.col_headers.index("IMonH")).text()
     #                 logging.info(f"{mych},  IMonH,  {imonh_val}")
 
     #             if self.dict_reg_bool.get("IMonL", False):
-    #                 imonl_val = self.table.item(ch_index, self.col_headers.index("IMonL")).text()
+    #                 imonl_val = self.table_mon.item(ch_index, self.col_headers.index("IMonL")).text()
     #                 logging.info(f"{mych},  IMonL,  {imonl_val}")
 
     #             if self.dict_reg_bool.get("Status", False):
-    #                 status_val = self.table.item(ch_index, self.col_headers.index("Status")).text()
+    #                 status_val = self.table_mon.item(ch_index, self.col_headers.index("Status")).text()
     #                 logging.info(f"{mych},  Status,  {status_val}")
 
 
     def toggle_button_state(self,):
         button = self.sender()
         key = None
-        for row in range(self.table.rowCount()):
-            if self.table.cellWidget(row, 1) == button:
-                channel_name = self.table.verticalHeaderItem(row).text()
+        for row in range(self.table_mon.rowCount()):
+            if self.table_mon.cellWidget(row, 1) == button:
+                channel_name = self.table_mon.verticalHeaderItem(row).text()
                 key = "{}_PW".format(channel_name)
                 break
         
@@ -615,13 +704,13 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_rapid[mykey]
                 value = round(origin_val * 0.05,2)
                 
-                existing_item = self.table.item(self.row_channels.index(ch), self.col_headers.index("IMonH"))
+                existing_item = self.table_mon.item(self.row_channels.index(ch), self.col_headers.index("IMonH"))
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["IMonH"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                    self.table.setItem(self.row_channels.index(ch), self.col_headers.index("IMonH"), item)
+                    self.table_mon.setItem(self.row_channels.index(ch), self.col_headers.index("IMonH"), item)
 
 
             if self.dict_reg_bool["IMonL"]:
@@ -629,13 +718,13 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_rapid[mykey]
                 value = round(origin_val * 0.005,3)
 
-                existing_item = self.table.item(self.row_channels.index(ch), self.col_headers.index("IMonL"))
+                existing_item = self.table_mon.item(self.row_channels.index(ch), self.col_headers.index("IMonL"))
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["IMonL"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                    self.table.setItem(self.row_channels.index(ch), self.col_headers.index("IMonL"), item)
+                    self.table_mon.setItem(self.row_channels.index(ch), self.col_headers.index("IMonL"), item)
 
 
             if self.dict_reg_bool["VMON"]:
@@ -643,13 +732,13 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_rapid[mykey]
                 value = round(origin_val * 0.1,1)
                 
-                existing_item = self.table.item(self.row_channels.index(ch), self.col_headers.index("VMON"))
+                existing_item = self.table_mon.item(self.row_channels.index(ch), self.col_headers.index("VMON"))
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["VMON"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                    self.table.setItem(self.row_channels.index(ch), self.col_headers.index("VMON"), item)
+                    self.table_mon.setItem(self.row_channels.index(ch), self.col_headers.index("VMON"), item)
 
 
             if self.dict_reg_bool["Status"]:
@@ -690,43 +779,44 @@ class DataMonitor(QMainWindow):
                 else:
                     value = "UNKNOWN"
 
-                existing_item = self.table.item(self.row_channels.index(ch), self.col_headers.index("Status"))
+                existing_item = self.table_mon.item(self.row_channels.index(ch), self.col_headers.index("Status"))
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["Status"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                    self.table.setItem(self.row_channels.index(ch), self.col_headers.index("Status"), item)
+                    self.table_mon.setItem(self.row_channels.index(ch), self.col_headers.index("Status"), item)
 
 
 
     def VME_Run_set(self,):        
         self.DataTaking_slow()
-        
+
         for ch in self.row_channels:
             if self.dict_reg_bool["ISet"]:
                 mykey = "{}_ISet".format(ch)
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val * 0.05,1)
-
-                existing_item = self.table.item(self.row_channels.index(ch), self.col_headers.index("ISet"))
+                
+                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("ISet")-self.table_mon.rowCount())
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["ISet"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table.setItem(self.row_channels.index(ch), self.col_headers.index("ISet"), item)
+                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("ISet"), item)
+                    
 
             if self.dict_reg_bool["VSet"]:
                 mykey = "{}_VSet".format(ch)
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val * 0.1,1)
 
-                existing_item = self.table.item(self.row_channels.index(ch), self.col_headers.index("VSet"))
+                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("VSet"))
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["VSet"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table.setItem(self.row_channels.index(ch), self.col_headers.index("VSet"), item)
+                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("VSet"), item)
 
 
             if self.dict_reg_bool["RUp"]:
@@ -734,12 +824,12 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val,0)
 
-                existing_item = self.table.item(self.row_channels.index(ch), self.col_headers.index("RUp"))
+                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("RUp"))
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["RUp"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table.setItem(self.row_channels.index(ch), self.col_headers.index("RUp"), item)
+                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("RUp"), item)
 
 
             if self.dict_reg_bool["RDwn"]:
@@ -747,12 +837,12 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val,0)
 
-                existing_item = self.table.item(self.row_channels.index(ch), self.col_headers.index("RDwn"))
+                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("RDwn"))
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["RDwn"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table.setItem(self.row_channels.index(ch), self.col_headers.index("RDwn"), item)
+                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("RDwn"), item)
 
 
             if self.dict_reg_bool["Temp"]:
@@ -760,12 +850,12 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val,0)
 
-                existing_item = self.table.item(self.row_channels.index(ch), self.col_headers.index("Temp"))
+                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("Temp"))
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["Temp"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table.setItem(self.row_channels.index(ch), self.col_headers.index("Temp"), item)
+                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("Temp"), item)
 
 
             if self.dict_reg_bool["Trip"]:
@@ -773,15 +863,19 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val * 0.1,1)
                 
-                existing_item = self.table.item(self.row_channels.index(ch), self.col_headers.index("Trip"))
+                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("Trip"))
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["Trip"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table.setItem(self.row_channels.index(ch), self.col_headers.index("Trip"), item)
+                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("Trip"), item)
 
+    # def on_return_pressed(self,):
+    #     user_input = self.terminal_input.text().strip()
+    #     self.terminal_output.appendPlainText(user_input)
+    #     self.terminal_input.clear()
 
-
+    
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
