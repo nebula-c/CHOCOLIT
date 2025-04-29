@@ -41,9 +41,11 @@ class DataMonitor(QMainWindow):
         
         
         self.channels = [f"CH{i}" for i in range(6)]
+        # self.parameters = ["VMON", "IMON", "ISET", "VSET", "RampUp", "RampDown", "Temperature"]
         self.parameters = ["Polarity", "PW", "IMonH", "IMonL", "VMON", "ISet", "VSet", "RUp", "RDwn", "Temp", "Trip", "Status"]
         keys = self.channels + self.parameters
         self.dict_reg_bool = {key: True for key in keys}
+        # self.colors = [QColor(255, 0, 0), QColor(255, 0, 0), QColor(255, 0, 0), QColor(255, 0, 0), QColor(255, 0, 0), QColor(255, 0, 0),QColor(255, 0, 0)]
         self.colors_para = {param: QColor(240,240,225) for param in self.parameters}
         
         self.central_widget = QWidget()
@@ -56,12 +58,14 @@ class DataMonitor(QMainWindow):
         pixmap_L = QPixmap(logo_path)
         scaled_pixmap_L = pixmap_L.scaled(1000, 100, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         logo_label_L.setPixmap(scaled_pixmap_L)
+        # self.layout.addWidget(logo_label_L)
 
         logo_label_R = QLabel()
         logo_path = pkg_resources.resource_filename('chocolit', 'images/Logo_letters_L.png')
         pixmap_R = QPixmap(logo_path)
         scaled_pixmap_R = pixmap_R.scaled(1000, 100, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         logo_label_R.setPixmap(scaled_pixmap_R)
+        # self.layout.addWidget(logo_label_R)
 
         logo_layout.addSpacing(20)
         logo_layout.addWidget(logo_label_L)
@@ -100,9 +104,7 @@ class DataMonitor(QMainWindow):
 
 
 
-        ### ---------------------------------------------
-        ### TABLE
-        ### ---------------------------------------------
+
         self.table = QTableWidget(len(self.channels), len(self.parameters))
         self.table.setHorizontalHeaderLabels(self.parameters)
         self.table.setVerticalHeaderLabels(self.channels)
@@ -119,9 +121,6 @@ class DataMonitor(QMainWindow):
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         
-        ### ---------------------------------------------
-        ### BUTTON-TABLE
-        ### ---------------------------------------------
         target_col_index = self.parameters.index("PW")
         for row in range(self.table.rowCount()):
             button = QPushButton("OFF")
@@ -129,10 +128,10 @@ class DataMonitor(QMainWindow):
             button.clicked.connect(self.toggle_button_state)
             self.table.setCellWidget(row, target_col_index, button)
         
-
-        ### ---------------------------------------------
-        ### CHECK BOX
-        ### ---------------------------------------------
+        # self.table.cellChanged.connect()
+        
+        
+        
         for row in range(6):
             checkbox = QCheckBox("CH{}".format(row))
             checkbox.setChecked(True)
@@ -165,10 +164,6 @@ class DataMonitor(QMainWindow):
         self.row_channels = ch_true_keys = [k for k, v in self.dict_reg_bool.items() if v and "CH" in k]
 
 
-
-        ### ---------------------------------------------
-        ### COMBO BOX
-        ### ---------------------------------------------
         combo = QComboBox()
         combo.addItems(["IMon Inzoom", "Normal IMon"])
         combo.currentIndexChanged.connect(self.__vme.setImonZoom)
@@ -198,92 +193,57 @@ class DataMonitor(QMainWindow):
                 self.table.setItem(self.row_channels.index(ch), self.col_headers.index("Polarity"), item)
 
 
-        ### ---------------------------------------------
-        ### TERMINAL
-        ### ---------------------------------------------
-        # self.terminal_input = QLineEdit(self)
-        # self.terminal_input.returnPressed.connect(self.on_return_pressed)
-        # self.terminal_input.setPlaceholderText("Ex: 'ch0/vest 20'")
-        # self.terminal_input.setStyleSheet("""
-        #     QLineEdit {
-        #         background-color: #1e1e1e;
-        #         color: #d4d4d4;
-        #         border: 1px solid #3c3c3c;
-        #         padding: 4px;
-        #         font-family: Consolas;
-        #         font-size: 14px;
-        #     }
-        # """)
-        self.terminal_output = QPlainTextEdit(self)
-        self.terminal_output.setReadOnly(True)
-        self.terminal_output.setStyleSheet("""
-            QPlainTextEdit {
-                background-color: #d4d4d4;
-                color: #1e1e1e;
-                border: none;
-                padding: 6px;
-                font-family: Consolas;
-                font-size: 14px;
-            }
-        """)
-
-        self.layout.addWidget(self.terminal_output)
-        # self.layout.addWidget(self.terminal_input)
-        self.layout.setContentsMargins(0, 0, 0, 20)
 
 
 
-        ### ---------------------------------------------
-        ### CHART
-        ### ---------------------------------------------
-        # self.chart_IMON = QChart()
-        # self.chart_IMON.setTitle("IMON")
-        # self.chart_IMON_view = QChartView(self.chart_IMON)
-        # self.layout.addWidget(self.chart_IMON_view)
+        self.chart_IMON = QChart()
+        self.chart_IMON.setTitle("IMON")
+        self.chart_IMON_view = QChartView(self.chart_IMON)
+        self.layout.addWidget(self.chart_IMON_view)
         
-        # self.chart_VMON = QChart()
-        # self.chart_VMON.setTitle("VMON")
-        # self.chart_VMON_view = QChartView(self.chart_VMON)
-        # self.layout.addWidget(self.chart_VMON_view)
+        self.chart_VMON = QChart()
+        self.chart_VMON.setTitle("VMON")
+        self.chart_VMON_view = QChartView(self.chart_VMON)
+        self.layout.addWidget(self.chart_VMON_view)
 
-        # self.axis_x_IMON = QValueAxis()
-        # self.axis_x_IMON.setTitleText("Time")
-        # self.axis_x_IMON.setRange(0, 10)
-        # self.chart_IMON.addAxis(self.axis_x_IMON, Qt.AlignmentFlag.AlignBottom)
+        self.axis_x_IMON = QValueAxis()
+        self.axis_x_IMON.setTitleText("Time")
+        self.axis_x_IMON.setRange(0, 10)
+        self.chart_IMON.addAxis(self.axis_x_IMON, Qt.AlignmentFlag.AlignBottom)
 
-        # self.axis_x_VMON = QValueAxis()
-        # self.axis_x_VMON.setTitleText("Time")
-        # self.axis_x_VMON.setRange(0, 10)
-        # self.chart_VMON.addAxis(self.axis_x_VMON, Qt.AlignmentFlag.AlignBottom)
+        self.axis_x_VMON = QValueAxis()
+        self.axis_x_VMON.setTitleText("Time")
+        self.axis_x_VMON.setRange(0, 10)
+        self.chart_VMON.addAxis(self.axis_x_VMON, Qt.AlignmentFlag.AlignBottom)
         
-        # self.axis_y_IMON = QValueAxis()
-        # self.axis_y_IMON.setTitleText("Value")
-        # self.axis_y_IMON.setRange(0, 10)
-        # self.chart_IMON.addAxis(self.axis_y_IMON, Qt.AlignmentFlag.AlignLeft)
+        self.axis_y_IMON = QValueAxis()
+        self.axis_y_IMON.setTitleText("Value")
+        self.axis_y_IMON.setRange(0, 10)
+        self.chart_IMON.addAxis(self.axis_y_IMON, Qt.AlignmentFlag.AlignLeft)
         
-        # self.axis_y_VMON = QValueAxis()
-        # self.axis_y_VMON.setTitleText("Value")
-        # self.axis_y_VMON.setRange(0, 10)
-        # self.chart_VMON.addAxis(self.axis_y_VMON, Qt.AlignmentFlag.AlignLeft)
+        self.axis_y_VMON = QValueAxis()
+        self.axis_y_VMON.setTitleText("Value")
+        self.axis_y_VMON.setRange(0, 10)
+        self.chart_VMON.addAxis(self.axis_y_VMON, Qt.AlignmentFlag.AlignLeft)
         
 
-        # self.all_imon_series = []
-        # self.all_vmon_series = []
-        # for i_ch in range(0,6):
-        #     if self.dict_reg_bool[self.channels[i_ch]]:
-        #         imon_series = QLineSeries()
-        #         vmon_series = QLineSeries()
-        #         imon_series.setName("IMON")
-        #         vmon_series.setName("VMON")    
-        #         self.chart_IMON.addSeries(imon_series)
-        #         self.chart_VMON.addSeries(vmon_series)
-        #         self.all_imon_series.append(imon_series)
-        #         self.all_vmon_series.append(vmon_series)
+        self.all_imon_series = []
+        self.all_vmon_series = []
+        for i_ch in range(0,6):
+            if self.dict_reg_bool[self.channels[i_ch]]:
+                imon_series = QLineSeries()
+                vmon_series = QLineSeries()
+                imon_series.setName("IMON")
+                vmon_series.setName("VMON")    
+                self.chart_IMON.addSeries(imon_series)
+                self.chart_VMON.addSeries(vmon_series)
+                self.all_imon_series.append(imon_series)
+                self.all_vmon_series.append(vmon_series)
 
-        #         self.all_imon_series[i_ch].attachAxis(self.axis_x_IMON)
-        #         self.all_imon_series[i_ch].attachAxis(self.axis_y_IMON)
-        #         self.all_vmon_series[i_ch].attachAxis(self.axis_x_VMON)
-        #         self.all_vmon_series[i_ch].attachAxis(self.axis_y_VMON)
+                self.all_imon_series[i_ch].attachAxis(self.axis_x_IMON)
+                self.all_imon_series[i_ch].attachAxis(self.axis_y_IMON)
+                self.all_vmon_series[i_ch].attachAxis(self.axis_x_VMON)
+                self.all_vmon_series[i_ch].attachAxis(self.axis_y_VMON)
             
         # self.timer = QTimer(self)
         
@@ -742,7 +702,7 @@ class DataMonitor(QMainWindow):
 
     def VME_Run_set(self,):        
         self.DataTaking_slow()
-
+        
         for ch in self.row_channels:
             if self.dict_reg_bool["ISet"]:
                 mykey = "{}_ISet".format(ch)
@@ -820,12 +780,8 @@ class DataMonitor(QMainWindow):
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table.setItem(self.row_channels.index(ch), self.col_headers.index("Trip"), item)
 
-    # def on_return_pressed(self,):
-    #     user_input = self.terminal_input.text().strip()
-    #     self.terminal_output.appendPlainText(user_input)
-    #     self.terminal_input.clear()
 
-    
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
