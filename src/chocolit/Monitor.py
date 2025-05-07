@@ -606,9 +606,23 @@ class DataMonitor(QMainWindow):
 
     def VME_Run_mon(self,):        
         self.DataTaking_rapid()
-        
         for ch in self.row_channels:
         
+            if self.dict_reg_bool["PW"]:
+                mykey = "{}_PW".format(ch)
+                origin_val = self.reg_map_rapid[mykey]
+                mybutton = self.table.cellWidget(self.row_channels.index(ch),self.col_headers.index("PW"))
+                if origin_val == 0:
+                    value = "OFF"
+                    mybutton.setText("OFF")
+                    mybutton.setStyleSheet("background-color: red; color: white;")
+                elif origin_val == 1:
+                    value = "ON"
+                    mybutton.setText("ON")
+                    mybutton.setStyleSheet("background-color: green; color: white;")
+                else:
+                    value = "ERROR"
+            
             if self.dict_reg_bool["IMonH"]:
             
                 mykey = "{}_IMonH".format(ch)
