@@ -193,7 +193,7 @@ class DataMonitor(QMainWindow):
             checkbox = QCheckBox("{}".format((self.mon_parameters+self.set_parameters)[col]))
             checkbox.setChecked(True)
             checkbox.toggled.connect(lambda checked, c=col: self.table_mon.setColumnHidden(c, not checked))
-            checkbox.toggled.connect(lambda checked, c=col: self.table_set.setColumnHidden(c-self.table_mon.rowCount(), not checked))
+            checkbox.toggled.connect(lambda checked, c=col: self.table_set.setColumnHidden(c-self.table_mon.columnCount(), not checked))
             checkbox.toggled.connect(lambda checked, k="{}".format(self.parameters[col]): self.dict_reg_bool.update({k: checked}))
             checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
             checkbox.toggled.connect(lambda checked, name=self.parameters[col]: logging.info(f"{name} logging :  {checked}"))
@@ -813,12 +813,13 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val * 0.05,1)
                 
-                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("ISet")-self.table_mon.rowCount())
+                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("ISet")-self.table_mon.columnCount())
+
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["ISet"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("ISet"), item)
+                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("ISet")-self.table_mon.columnCount(), item)
                     
 
             if self.dict_reg_bool["VSet"]:
@@ -826,12 +827,12 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val * 0.1,1)
 
-                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("VSet"))
+                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("VSet")-self.table_mon.columnCount())
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["VSet"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("VSet"), item)
+                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("VSet")-self.table_mon.columnCount(), item)
 
 
             if self.dict_reg_bool["RUp"]:
@@ -839,12 +840,12 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val,0)
 
-                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("RUp"))
+                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("RUp")-self.table_mon.columnCount())
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["RUp"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("RUp"), item)
+                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("RUp")-self.table_mon.columnCount(), item)
 
 
             if self.dict_reg_bool["RDwn"]:
@@ -852,12 +853,12 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val,0)
 
-                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("RDwn"))
+                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("RDwn")-self.table_mon.columnCount())
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["RDwn"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("RDwn"), item)
+                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("RDwn")-self.table_mon.columnCount(), item)
 
 
             if self.dict_reg_bool["Temp"]:
@@ -865,12 +866,12 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val,0)
 
-                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("Temp"))
+                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("Temp")-self.table_mon.columnCount())
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["Temp"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("Temp"), item)
+                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("Temp")-self.table_mon.columnCount(), item)
 
 
             if self.dict_reg_bool["Trip"]:
@@ -878,13 +879,12 @@ class DataMonitor(QMainWindow):
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val * 0.1,1)
                 
-                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("Trip"))
+                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("Trip")-self.table_mon.columnCount())
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["Trip"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("Trip"), item)
-
+                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("Trip")-self.table_mon.columnCount(), item)
     # def on_return_pressed(self,):
     #     user_input = self.terminal_input.text().strip()
     #     self.terminal_output.appendPlainText(user_input)
