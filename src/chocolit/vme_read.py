@@ -35,7 +35,7 @@ class VME_READ():
             self.rapid_reg_map = {
                 k: copy.deepcopy(v)
                 for k, v in register_map.items()
-                if any(substr in k for substr in ["MON", "Mon", "Status"])
+                if any(substr in k for substr in ["PW", "MON", "Mon", "Status"])
 
             }
             self.once_reg_map = {
@@ -157,7 +157,7 @@ class VME_READ():
             self.rapid_reg_map = {
                 k: copy.deepcopy(v)
                 for k, v in register_map.items()
-                if any(substr in k for substr in ["MON", "Mon", "Status"])
+                if any(substr in k for substr in ["PW", "MON", "Mon", "Status"])
 
             }
             self.once_reg_map = {
