@@ -180,3 +180,6 @@ class VME_READ():
             self.device.write_cycle(self.__vme_base_address | address, val_01, self.__address_modifier, self.__data_width)
         except self.vme.Error as ex:
             print(f'Failed: {ex}')
+
+    def write_value(self,key,val):
+        self.write_cycle(self.slow_reg_map[key],int(val))

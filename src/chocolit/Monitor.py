@@ -24,6 +24,7 @@ class DataMonitor(QMainWindow):
     reg_map_once = []
     
     __is_inzoomed = True
+    editing_cells = set()
 
     def __init__(self,log_filename,testmode=False):
         logging.basicConfig(
@@ -41,7 +42,7 @@ class DataMonitor(QMainWindow):
         
         
         self.channels = [f"CH{i}" for i in range(6)]
-        self.parameters = ["Polarity", "PW", "IMonH", "IMonL", "VMON", "ISet", "VSet", "RUp", "RDwn", "Temp", "Trip", "Status"]
+        self.parameters = ["Polarity", "PW", "IMonH", "IMonL", "VMON", "Status", "ISet", "VSet", "RUp", "RDwn", "Temp", "Trip"]
         self.mon_parameters = ["Polarity", "PW", "IMonH", "IMonL", "VMON","Status"]
         self.set_parameters = ["ISet", "VSet", "RUp", "RDwn", "Temp", "Trip"]
         # keys = self.channels + self.parameters
@@ -140,6 +141,9 @@ class DataMonitor(QMainWindow):
         self.table_set.setVerticalHeaderLabels(self.channels)
         self.table_set.verticalHeader().setVisible(False)
         self.table_set.setFixedHeight(210)
+        self.table_set.cellChanged.connect(self.on_cell_changed)
+        self.table_set.cellActivated.connect(self.on_cell_activated)
+        self.table_set.cellDoubleClicked.connect(self.on_cell_activated)
 
 
         self.table_set.setStyleSheet("""
@@ -164,12 +168,13 @@ class DataMonitor(QMainWindow):
         ### ---------------------------------------------
         ### BUTTON-table_mon
         ### ---------------------------------------------
-        target_col_index = self.parameters.index("PW")
-        for row in range(self.table_mon.rowCount()):
-            button = QPushButton("OFF")
-            button.setStyleSheet("background-color: red; color: white;")
-            button.clicked.connect(self.toggle_button_state)
-            self.table_mon.setCellWidget(row, target_col_index, button)
+        self.Set_Button()
+        # target_col_index = self.parameters.index("PW")
+        # for row in range(self.table_mon.rowCount()):
+        #     button = QPushButton("OFF")
+        #     button.setStyleSheet("background-color: red; color: white;")
+        #     button.clicked.connect(self.toggle_button_state)
+        #     self.table_mon.setCellWidget(row, target_col_index, button)
         
 
         ### ---------------------------------------------
@@ -178,35 +183,47 @@ class DataMonitor(QMainWindow):
         for row in range(6):
             checkbox = QCheckBox("CH{}".format(row))
             checkbox.setChecked(True)
-            checkbox.toggled.connect(lambda checked, r=row: self.table_mon.setRowHidden(r, not checked))
-            checkbox.toggled.connect(lambda checked, r=row: self.table_set.setRowHidden(r, not checked))
+            # checkbox.toggled.connect(lambda checked, r=row: self.table_mon.setRowHidden(r, not checked))
+            # checkbox.toggled.connect(lambda checked, r=row: self.table_set.setRowHidden(r, not checked))
             checkbox.toggled.connect(lambda checked, k="CH{}".format(row): self.dict_reg_bool.update({k: checked}))
             checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
-            checkbox.toggled.connect(lambda checked, r=row: logging.info(f"CH{r} logging :  {checked}"))
             checkbox.toggled.connect(lambda checked: setattr(self, 'row_channels', [k for k, v in self.dict_reg_bool.items() if v and "CH" in k]))
+            checkbox.toggled.connect(lambda checked, r=row: self.toggle_table_visibility_row(checked, r))
+            checkbox.toggled.connect(lambda checked, r=row: logging.info(f"CH{r} logging :  {checked}"))
+            
 
 
             toggle_row_box.addWidget(checkbox)
-        
-
-        for col in range(len(self.mon_parameters+self.set_parameters)):
-            checkbox = QCheckBox("{}".format((self.mon_parameters+self.set_parameters)[col]))
-            checkbox.setChecked(True)
-            checkbox.toggled.connect(lambda checked, c=col: self.table_mon.setColumnHidden(c, not checked))
-            checkbox.toggled.connect(lambda checked, c=col: self.table_set.setColumnHidden(c-self.table_mon.columnCount(), not checked))
-            checkbox.toggled.connect(lambda checked, k="{}".format(self.parameters[col]): self.dict_reg_bool.update({k: checked}))
-            checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
-            checkbox.toggled.connect(lambda checked, name=self.parameters[col]: logging.info(f"{name} logging :  {checked}"))
-
-
-            toggle_col_box.addWidget(checkbox)
-        
         
         self.col_headers = (
         [self.table_mon.horizontalHeaderItem(i).text() for i in range(self.table_mon.columnCount())]
          + [self.table_set.horizontalHeaderItem(i).text() for i in range(self.table_set.columnCount())]
         )
         self.row_channels = ch_true_keys = [k for k, v in self.dict_reg_bool.items() if v and "CH" in k]
+
+        
+        # for col in range(len(self.mon_parameters+self.set_parameters)):
+        for col in range(len(self.parameters)):
+            checkbox = QCheckBox("{}".format((self.mon_parameters+self.set_parameters)[col]))
+            checkbox.setChecked(True)
+            # checkbox.toggled.connect(lambda checked, c=col: self.table_mon.setColumnHidden(c, not checked))
+            # checkbox.toggled.connect(lambda checked, c=col: self.table_set.setColumnHidden(c-self.table_mon.columnCount(), not checked))
+            checkbox.toggled.connect(lambda checked, c=col: self.update_col_headers(c))
+            checkbox.toggled.connect(lambda checked, k="{}".format(self.col_headers[col]): self.dict_reg_bool.update({k: checked}))
+            checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
+            checkbox.toggled.connect(lambda checked, c=col: self.toggle_table_visibility_col(checked, c))
+            
+            checkbox.toggled.connect(lambda checked, name=self.col_headers[col]: logging.info(f"{name} logging :  {checked}"))
+
+
+            toggle_col_box.addWidget(checkbox)
+        
+        
+        # self.col_headers = (
+        # [self.table_mon.horizontalHeaderItem(i).text() for i in range(self.table_mon.columnCount())]
+        #  + [self.table_set.horizontalHeaderItem(i).text() for i in range(self.table_set.columnCount())]
+        # )
+        # self.row_channels = ch_true_keys = [k for k, v in self.dict_reg_bool.items() if v and "CH" in k]
 
 
 
@@ -228,23 +245,23 @@ class DataMonitor(QMainWindow):
 
         self.DataTaking_once()
         
-        for ch in self.row_channels:
-            mykey = "{}_Polarity".format(ch)
-            origin_val = self.reg_map_once[mykey]
-            if origin_val == 0:
-                value = "NEG"
-            elif origin_val == 1:
-                value = "POS"
-            else:
-                value = "ERROR"
+        # for ch in self.row_channels:
+        #     mykey = "{}_Polarity".format(ch)
+        #     origin_val = self.reg_map_once[mykey]
+        #     if origin_val == 0:
+        #         value = "NEG"
+        #     elif origin_val == 1:
+        #         value = "POS"
+        #     else:
+        #         value = "ERROR"
             
-            existing_item = self.table_mon.item(self.row_channels.index(ch), self.col_headers.index("Polarity"))
-            if existing_item is None or existing_item.text() != str(value):
-                item = QTableWidgetItem(str(value))
-                item.setBackground(self.colors_para["Polarity"])
-                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                self.table_mon.setItem(self.row_channels.index(ch), self.col_headers.index("Polarity"), item)
+        #     existing_item = self.table_mon.item(self.row_channels.index(ch), self.col_headers.index("Polarity"))
+        #     if existing_item is None or existing_item.text() != str(value):
+        #         item = QTableWidgetItem(str(value))
+        #         item.setBackground(self.colors_para["Polarity"])
+        #         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        #         item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        #         self.table_mon.setItem(self.row_channels.index(ch), self.col_headers.index("Polarity"), item)
 
 
         ### ---------------------------------------------
@@ -466,6 +483,26 @@ class DataMonitor(QMainWindow):
     
     def DataTaking_once(self,):
         self.reg_map_once = self.__vme.Get_data_once()
+        for ch in self.row_channels:
+            row = int(ch[2:])
+            col = self.col_headers.index("Polarity")
+
+            mykey = "{}_Polarity".format(ch)
+            origin_val = self.reg_map_once[mykey]
+            if origin_val == 0:
+                value = "NEG"
+            elif origin_val == 1:
+                value = "POS"
+            else:
+                value = "ERROR"
+            
+            existing_item = self.table_mon.item(row,col)
+            if existing_item is None or existing_item.text() != str(value):
+                item = QTableWidgetItem(str(value))
+                item.setBackground(self.colors_para["Polarity"])
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                self.table_mon.setItem(row,col, item)
 
 
     def combo_func(self,):
@@ -697,8 +734,9 @@ class DataMonitor(QMainWindow):
         self.DataTaking_rapid()
         
         for ch in self.row_channels:
-            
+            row = int(ch[2:])
             if self.dict_reg_bool["PW"]:
+                col = self.col_headers.index("PW")
                 mykey = "{}_PW".format(ch)
                 origin_val = self.reg_map_rapid[mykey]
                 mybutton = self.table_mon.cellWidget(self.row_channels.index(ch),self.col_headers.index("PW"))
@@ -714,49 +752,52 @@ class DataMonitor(QMainWindow):
                     value = "ERROR"
 
             if self.dict_reg_bool["IMonH"]:
-            
+                col = self.col_headers.index("IMonH")
                 mykey = "{}_IMonH".format(ch)
                 origin_val = self.reg_map_rapid[mykey]
                 value = round(origin_val * 0.05,2)
                 
-                existing_item = self.table_mon.item(self.row_channels.index(ch), self.col_headers.index("IMonH"))
+                existing_item = self.table_mon.item(row,col)
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["IMonH"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                    self.table_mon.setItem(self.row_channels.index(ch), self.col_headers.index("IMonH"), item)
+                    self.table_mon.setItem(row,col, item)
 
 
             if self.dict_reg_bool["IMonL"]:
+                col = self.col_headers.index("IMonL")
                 mykey = "{}_IMonL".format(ch)
                 origin_val = self.reg_map_rapid[mykey]
                 value = round(origin_val * 0.005,3)
 
-                existing_item = self.table_mon.item(self.row_channels.index(ch), self.col_headers.index("IMonL"))
+                existing_item = self.table_mon.item(row,col)
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["IMonL"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                    self.table_mon.setItem(self.row_channels.index(ch), self.col_headers.index("IMonL"), item)
+                    self.table_mon.setItem(row,col, item)
 
 
             if self.dict_reg_bool["VMON"]:
+                col = self.col_headers.index("VMON")
                 mykey = "{}_VMON".format(ch)
                 origin_val = self.reg_map_rapid[mykey]
                 value = round(origin_val * 0.1,1)
                 
-                existing_item = self.table_mon.item(self.row_channels.index(ch), self.col_headers.index("VMON"))
+                existing_item = self.table_mon.item(row,col)
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["VMON"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                    self.table_mon.setItem(self.row_channels.index(ch), self.col_headers.index("VMON"), item)
+                    self.table_mon.setItem(row,col, item)
 
 
             if self.dict_reg_bool["Status"]:
+                col = self.col_headers.index("Status")
                 mykey = "{}_Status".format(ch)
                 origin_val = self.reg_map_rapid[mykey]
                 if origin_val == 0:
@@ -794,103 +835,204 @@ class DataMonitor(QMainWindow):
                 else:
                     value = "UNKNOWN"
 
-                existing_item = self.table_mon.item(self.row_channels.index(ch), self.col_headers.index("Status"))
+                existing_item = self.table_mon.item(row,col)
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["Status"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                    self.table_mon.setItem(self.row_channels.index(ch), self.col_headers.index("Status"), item)
+                    self.table_mon.setItem(row,col, item)
 
 
 
     def VME_Run_set(self,):        
+        self.table_set.blockSignals(True)
+
+
         self.DataTaking_slow()
 
         for ch in self.row_channels:
+            # row = self.row_channels.index(ch)
+            row = int(ch[2:])
             if self.dict_reg_bool["ISet"]:
+                col = self.col_headers.index("ISet")-self.table_mon.columnCount()
+                if (row, col) in self.editing_cells:
+                    continue
                 mykey = "{}_ISet".format(ch)
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val * 0.05,1)
                 
-                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("ISet")-self.table_mon.columnCount())
+                existing_item = self.table_set.item(row,col)
 
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["ISet"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("ISet")-self.table_mon.columnCount(), item)
+                    self.table_set.setItem(row,col, item)
                     
 
             if self.dict_reg_bool["VSet"]:
+                col = self.col_headers.index("VSet")-self.table_mon.columnCount()
+                if (row, col) in self.editing_cells:
+                    continue
                 mykey = "{}_VSet".format(ch)
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val * 0.1,1)
 
-                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("VSet")-self.table_mon.columnCount())
+                existing_item = self.table_set.item(row,col)
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["VSet"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("VSet")-self.table_mon.columnCount(), item)
+                    self.table_set.setItem(row,col, item)
 
 
             if self.dict_reg_bool["RUp"]:
+                col = self.col_headers.index("RUp")-self.table_mon.columnCount()
+                if (row, col) in self.editing_cells:
+                    continue
                 mykey = "{}_RUp".format(ch)
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val,0)
 
-                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("RUp")-self.table_mon.columnCount())
+                existing_item = self.table_set.item(row,col)
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["RUp"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("RUp")-self.table_mon.columnCount(), item)
+                    self.table_set.setItem(row,col, item)
 
 
             if self.dict_reg_bool["RDwn"]:
+                col = self.col_headers.index("RDwn")-self.table_mon.columnCount()
+                if (row, col) in self.editing_cells:
+                    continue
                 mykey = "{}_RDwn".format(ch)
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val,0)
 
-                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("RDwn")-self.table_mon.columnCount())
+                existing_item = self.table_set.item(row,col)
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["RDwn"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("RDwn")-self.table_mon.columnCount(), item)
+                    self.table_set.setItem(row,col, item)
 
 
             if self.dict_reg_bool["Temp"]:
+                col = self.col_headers.index("Temp")-self.table_mon.columnCount()
+                if (row, col) in self.editing_cells:
+                    continue
                 mykey = "{}_Temp".format(ch)
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val,0)
 
-                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("Temp")-self.table_mon.columnCount())
+                existing_item = self.table_set.item(row,col)
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["Temp"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("Temp")-self.table_mon.columnCount(), item)
+                    self.table_set.setItem(row,col, item)
 
 
             if self.dict_reg_bool["Trip"]:
+                col = self.col_headers.index("Trip")-self.table_mon.columnCount()
+                if (row, col) in self.editing_cells:
+                    continue
                 mykey = "{}_Trip".format(ch)
                 origin_val = self.reg_map_slow[mykey]
                 value = round(origin_val * 0.1,1)
                 
-                existing_item = self.table_set.item(self.row_channels.index(ch), self.col_headers.index("Trip")-self.table_mon.columnCount())
+                existing_item = self.table_set.item(row,col)
                 if existing_item is None or existing_item.text() != str(value):
                     item = QTableWidgetItem(str(value))
                     item.setBackground(self.colors_para["Trip"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    self.table_set.setItem(self.row_channels.index(ch), self.col_headers.index("Trip")-self.table_mon.columnCount(), item)
+                    self.table_set.setItem(row,col, item)
+        self.table_set.blockSignals(False)
+
+    
     # def on_return_pressed(self,):
     #     user_input = self.terminal_input.text().strip()
     #     self.terminal_output.appendPlainText(user_input)
     #     self.terminal_input.clear()
 
-    
+    def on_cell_activated(self, row, col):
+        self.editing_cells.add((row, col))
+
+    def on_cell_changed(self, row, col):
+        self.editing_cells.discard((row, col))
+        # new_value = self.item(row, col).text()
+        new_value = self.table_set.item(row,col).text()
+        # mykey = "CH"+
+        self.write_value(row, col, new_value)
+
+    def write_value(self, row, col, new_value):
+        row = "CH" + str(row)
+        col = self.parameters[col + self.table_mon.columnCount()]
+        key  = row + "_" + col
+        
+        if col = "VSet":
+            value = round(new_value * 0.1,1)
+        elif col = "ISet":
+            value = round(new_value * 0.05,1)
+        elif col = "RUp":
+            value = round(new_value,0)
+        elif col = "RDwn":
+            value = round(new_value,0)
+        elif col = "Temp":
+            return
+        elif col = "Trip":
+            value = round(new_value * 0.1,1)
+
+        self.__vme.write_value(key,value)
+
+    def toggle_table_visibility_row(self, checked, row):
+        self.table_mon.setRowHidden(row, not checked)
+        self.table_set.setRowHidden(row, not checked)
+
+        self.table_mon.clearContents()
+        self.table_set.clearContents()
+
+        self.Set_Button()
+        self.DataTaking_once()
+
+    def toggle_table_visibility_col(self, checked, col):
+        if(col < self.table_mon.columnCount()):
+            self.table_mon.setColumnHidden(col, not checked)
+        else:
+            self.table_set.setColumnHidden(col-self.table_mon.columnCount(), not checked)
+
+        self.table_mon.clearContents()
+        self.table_set.clearContents()
+
+        self.Set_Button()
+        self.DataTaking_once()
+
+    def Set_Button(self,):
+        target_col_index = self.parameters.index("PW")
+        for row in range(self.table_mon.rowCount()):
+            button = QPushButton("OFF")
+            button.setStyleSheet("background-color: red; color: white;")
+            button.clicked.connect(self.toggle_button_state)
+            self.table_mon.setCellWidget(row, target_col_index, button)
+
+    def update_col_headers(self, col):
+        mykey = self.parameters[col]
+        if mykey in self.col_headers:
+            return
+        else:
+            self.col_headers = (
+                [self.table_mon.horizontalHeaderItem(i).text()
+                for i in range(self.table_mon.columnCount())
+                if not self.table_mon.isColumnHidden(i)]
+                +
+                [self.table_set.horizontalHeaderItem(i).text()
+                for i in range(self.table_set.columnCount())
+                if not self.table_set.isColumnHidden(i)]
+            )
+        
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
