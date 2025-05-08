@@ -764,6 +764,7 @@ class DataMonitor(QMainWindow):
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     self.table_mon.setItem(row,col, item)
+                    logging.info("CH{} IMon :  {} uA".format(row,value))
 
 
             if self.dict_reg_bool["IMonL"]:
@@ -779,6 +780,7 @@ class DataMonitor(QMainWindow):
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     self.table_mon.setItem(row,col, item)
+                    logging.info("CH{} IMon :  {} uA".format(row,value))
 
 
             if self.dict_reg_bool["VMON"]:
@@ -794,6 +796,7 @@ class DataMonitor(QMainWindow):
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     self.table_mon.setItem(row,col, item)
+                    logging.info("CH{} VMon :  {} V".format(row,value))
 
 
             if self.dict_reg_bool["Status"]:
@@ -842,6 +845,7 @@ class DataMonitor(QMainWindow):
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     self.table_mon.setItem(row,col, item)
+                    logging.info("CH{} Status :  {}".format(row,value))
 
 
 
@@ -869,6 +873,7 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["ISet"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
+                    logging.info("CH{} ISet :  {} uA".format(row,value))
                     
 
             if self.dict_reg_bool["VSet"]:
@@ -885,6 +890,7 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["VSet"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
+                    logging.info("CH{} VSet :  {} V".format(row,value))
 
 
             if self.dict_reg_bool["RUp"]:
@@ -901,6 +907,7 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["RUp"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
+                    logging.info("CH{} RampUp :  {} V".format(row,value))
 
 
             if self.dict_reg_bool["RDwn"]:
@@ -917,6 +924,7 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["RDwn"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
+                    logging.info("CH{} RampDown :  {} V".format(row,value))
 
 
             if self.dict_reg_bool["Temp"]:
@@ -933,6 +941,7 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["Temp"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
+                    logging.info("CH{} Temp :  {} C".format(row,value))
 
 
             if self.dict_reg_bool["Trip"]:
@@ -949,6 +958,8 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["Trip"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
+                    logging.info("CH{} Trip :  {} sec".format(row,value))
+
         self.table_set.blockSignals(False)
 
     
@@ -972,18 +983,18 @@ class DataMonitor(QMainWindow):
         col = self.parameters[col + self.table_mon.columnCount()]
         key  = row + "_" + col
         
-        if col = "VSet":
-            value = round(new_value * 0.1,1)
-        elif col = "ISet":
-            value = round(new_value * 0.05,1)
-        elif col = "RUp":
-            value = round(new_value,0)
-        elif col = "RDwn":
-            value = round(new_value,0)
-        elif col = "Temp":
+        if col == "VSet":
+            value = round(float(new_value) * 0.1,1)
+        elif col == "ISet":
+            value = round(float(new_value) * 0.05,1)
+        elif col == "RUp":
+            value = round(float(new_value),0)
+        elif col == "RDwn":
+            value = round(float(new_value),0)
+        elif col == "Temp":
             return
-        elif col = "Trip":
-            value = round(new_value * 0.1,1)
+        elif col == "Trip":
+            value = round(float(new_value) * 0.1,1)
 
         self.__vme.write_value(key,value)
 
