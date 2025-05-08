@@ -765,6 +765,19 @@ class DataMonitor(QMainWindow):
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     self.table_mon.setItem(row,col, item)
                     logging.info("CH{} IMon :  {} uA".format(row,value))
+                    
+                    col_iset = self.col_headers.index("ISet")-self.table_mon.columnCount()
+                    if self.table_set.item(row,col_iset) is not None:
+                        iset_val = float(self.table_set.item(row,col_iset).text())
+                        if value >= iset_val:
+                            item.setBackground(QColor("red"))
+                            item.setForeground(QColor("white"))
+                        else:
+                            item.setBackground(self.colors_para["IMonH"])
+                            item.setForeground(QColor("black"))
+
+
+                    
 
 
             if self.dict_reg_bool["IMonL"]:
@@ -781,6 +794,17 @@ class DataMonitor(QMainWindow):
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     self.table_mon.setItem(row,col, item)
                     logging.info("CH{} IMon :  {} uA".format(row,value))
+
+                    col_iset = self.col_headers.index("ISet")-self.table_mon.columnCount()
+                    if self.table_set.item(row,col_iset) is not None:
+                        iset_val = float(self.table_set.item(row,col_iset).text())
+                        if value >= iset_val:
+                            item.setBackground(QColor("red"))
+                            item.setForeground(QColor("white"))
+                        else:
+                            item.setBackground(self.colors_para["IMonL"])
+                            item.setForeground(QColor("black"))
+
 
 
             if self.dict_reg_bool["VMON"]:
@@ -907,7 +931,7 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["RUp"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
-                    logging.info("CH{} RampUp :  {} V".format(row,value))
+                    logging.info("CH{} RampUp :  {} Vps".format(row,value))
 
 
             if self.dict_reg_bool["RDwn"]:
@@ -924,7 +948,7 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["RDwn"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
-                    logging.info("CH{} RampDown :  {} V".format(row,value))
+                    logging.info("CH{} RampDown :  {} Vps".format(row,value))
 
 
             if self.dict_reg_bool["Temp"]:
@@ -984,9 +1008,9 @@ class DataMonitor(QMainWindow):
         key  = row + "_" + col
         
         if col == "VSet":
-            value = round(float(new_value) * 0.1,1)
+            value = round(float(new_value) / 0.1,1)
         elif col == "ISet":
-            value = round(float(new_value) * 0.05,1)
+            value = round(float(new_value) / 0.05,1)
         elif col == "RUp":
             value = round(float(new_value),0)
         elif col == "RDwn":
@@ -994,7 +1018,7 @@ class DataMonitor(QMainWindow):
         elif col == "Temp":
             return
         elif col == "Trip":
-            value = round(float(new_value) * 0.1,1)
+            value = round(float(new_value) / 0.1,1)
 
         self.__vme.write_value(key,value)
 
