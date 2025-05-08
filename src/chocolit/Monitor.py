@@ -3,7 +3,7 @@
 import random
 import numpy as np
 from PyQt6.QtWidgets import *
-from PyQt6.QtGui import QColor, QPixmap
+from PyQt6.QtGui import QColor, QPixmap, QTextCharFormat, QTextCursor
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtCharts import QChart, QChartView, QLineSeries, QValueAxis
 from datetime import datetime
@@ -18,7 +18,8 @@ from .vme_read import VME_READ
 
 class DataMonitor(QMainWindow):
     
-    __vme = VME_READ()
+    __vme = None
+    
     reg_map_rapid = []
     reg_map_slow = []
     reg_map_once = []
@@ -35,17 +36,27 @@ class DataMonitor(QMainWindow):
         self.is_test=testmode
 
 
-        
+
+
+
+
+
+
+
+
+
+
+
         super().__init__()
         self.setWindowTitle("Channel Data Monitor")
         self.setGeometry(100, 100, 800, 600)
+        
         
         
         self.channels = [f"CH{i}" for i in range(6)]
         self.parameters = ["Polarity", "PW", "IMonH", "IMonL", "VMON", "Status", "ISet", "VSet", "RUp", "RDwn", "Temp", "Trip"]
         self.mon_parameters = ["Polarity", "PW", "IMonH", "IMonL", "VMON","Status"]
         self.set_parameters = ["ISet", "VSet", "RUp", "RDwn", "Temp", "Trip"]
-        # keys = self.channels + self.parameters
         keys = self.channels + self.mon_parameters + self.set_parameters
         self.dict_reg_bool = {key: True for key in keys}
         self.colors_para = {param: QColor(240,240,225) for param in self.parameters}
@@ -168,23 +179,55 @@ class DataMonitor(QMainWindow):
         ### ---------------------------------------------
         ### BUTTON-table_mon
         ### ---------------------------------------------
-        self.Set_Button()
-        # target_col_index = self.parameters.index("PW")
-        # for row in range(self.table_mon.rowCount()):
-        #     button = QPushButton("OFF")
-        #     button.setStyleSheet("background-color: red; color: white;")
-        #     button.clicked.connect(self.toggle_button_state)
-        #     self.table_mon.setCellWidget(row, target_col_index, button)
+        
+        self.terminal_output = QPlainTextEdit(self)
+        self.terminal_output.setReadOnly(True)
+        self.terminal_output.setStyleSheet("""
+            QPlainTextEdit {
+                background-color: #d4d4d4;
+                color: #1e1e1e;
+                border: none;
+                padding: 6px;
+                font-family: Consolas;
+                font-size: 14px;
+            }
+        """)
+
+        self.layout.addWidget(self.terminal_output)
+        self.layout.setContentsMargins(0, 0, 0, 20)
+        self.terminal_output.appendPlainText("You can find the full code here. https://github.com/nebula-c/CHOCOLIT (suchoi9709@gmail.com, Sungwoon Choi)")
+        self.terminal_output.appendPlainText('''This version is "two_tables" branch.''')
+        self.terminal_output.appendPlainText("")
         
 
+        self.__vme = VME_READ()
+        is_init_success = self.__vme.is_init_success
+        temp_time = datetime.now()
+        if is_init_success == True:
+            self.terminal_output.appendPlainText("{} VME is conneted. Starting logging.".format(temp_time))
+        else:
+            self.terminal_output.appendPlainText("{} !!! VME is not conneted !!!".format(temp_time))
+            return
+
+
+        self.Set_Button()       # BUTTON-table_mon
+        
         ### ---------------------------------------------
-        ### CHECK BOX
+        ### COMBO BOX
         ### ---------------------------------------------
+        combo = QComboBox()
+        combo.addItems(["IMon Inzoom", "Normal IMon"])
+        combo.currentIndexChanged.connect(self.__vme.setImonZoom)
+        toggle_row_box.addWidget(combo)
+        
+        toggle_layout.addLayout(toggle_row_box)
+        toggle_layout.addLayout(toggle_col_box)
+
+
+
         for row in range(6):
             checkbox = QCheckBox("CH{}".format(row))
             checkbox.setChecked(True)
-            # checkbox.toggled.connect(lambda checked, r=row: self.table_mon.setRowHidden(r, not checked))
-            # checkbox.toggled.connect(lambda checked, r=row: self.table_set.setRowHidden(r, not checked))
             checkbox.toggled.connect(lambda checked, k="CH{}".format(row): self.dict_reg_bool.update({k: checked}))
             checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
             checkbox.toggled.connect(lambda checked: setattr(self, 'row_channels', [k for k, v in self.dict_reg_bool.items() if v and "CH" in k]))
@@ -202,12 +245,9 @@ class DataMonitor(QMainWindow):
         self.row_channels = ch_true_keys = [k for k, v in self.dict_reg_bool.items() if v and "CH" in k]
 
         
-        # for col in range(len(self.mon_parameters+self.set_parameters)):
         for col in range(len(self.parameters)):
             checkbox = QCheckBox("{}".format((self.mon_parameters+self.set_parameters)[col]))
             checkbox.setChecked(True)
-            # checkbox.toggled.connect(lambda checked, c=col: self.table_mon.setColumnHidden(c, not checked))
-            # checkbox.toggled.connect(lambda checked, c=col: self.table_set.setColumnHidden(c-self.table_mon.columnCount(), not checked))
             checkbox.toggled.connect(lambda checked, c=col: self.update_col_headers(c))
             checkbox.toggled.connect(lambda checked, k="{}".format(self.col_headers[col]): self.dict_reg_bool.update({k: checked}))
             checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
@@ -217,27 +257,6 @@ class DataMonitor(QMainWindow):
 
 
             toggle_col_box.addWidget(checkbox)
-        
-        
-        # self.col_headers = (
-        # [self.table_mon.horizontalHeaderItem(i).text() for i in range(self.table_mon.columnCount())]
-        #  + [self.table_set.horizontalHeaderItem(i).text() for i in range(self.table_set.columnCount())]
-        # )
-        # self.row_channels = ch_true_keys = [k for k, v in self.dict_reg_bool.items() if v and "CH" in k]
-
-
-
-        ### ---------------------------------------------
-        ### COMBO BOX
-        ### ---------------------------------------------
-        combo = QComboBox()
-        combo.addItems(["IMon Inzoom", "Normal IMon"])
-        combo.currentIndexChanged.connect(self.__vme.setImonZoom)
-        toggle_row_box.addWidget(combo)
-        
-        toggle_layout.addLayout(toggle_row_box)
-        toggle_layout.addLayout(toggle_col_box)
-
 
 
 
@@ -280,22 +299,23 @@ class DataMonitor(QMainWindow):
         #         font-size: 14px;
         #     }
         # """)
-        self.terminal_output = QPlainTextEdit(self)
-        self.terminal_output.setReadOnly(True)
-        self.terminal_output.setStyleSheet("""
-            QPlainTextEdit {
-                background-color: #d4d4d4;
-                color: #1e1e1e;
-                border: none;
-                padding: 6px;
-                font-family: Consolas;
-                font-size: 14px;
-            }
-        """)
+        
+        
+        # self.terminal_output = QPlainTextEdit(self)
+        # self.terminal_output.setReadOnly(True)
+        # self.terminal_output.setStyleSheet("""
+        #     QPlainTextEdit {
+        #         background-color: #d4d4d4;
+        #         color: #1e1e1e;
+        #         border: none;
+        #         padding: 6px;
+        #         font-family: Consolas;
+        #         font-size: 14px;
+        #     }
+        # """)
 
-        self.layout.addWidget(self.terminal_output)
-        # self.layout.addWidget(self.terminal_input)
-        self.layout.setContentsMargins(0, 0, 0, 20)
+        # self.layout.addWidget(self.terminal_output)
+        # self.layout.setContentsMargins(0, 0, 0, 20)
 
 
 
@@ -772,6 +792,8 @@ class DataMonitor(QMainWindow):
                         if value >= iset_val:
                             item.setBackground(QColor("red"))
                             item.setForeground(QColor("white"))
+                            temp_time = datetime.now()
+                            self.append_colored_text('''{} Ch{} Over current'''.format(temp_time,row))
                         else:
                             item.setBackground(self.colors_para["IMonH"])
                             item.setForeground(QColor("black"))
@@ -801,6 +823,8 @@ class DataMonitor(QMainWindow):
                         if value >= iset_val:
                             item.setBackground(QColor("red"))
                             item.setForeground(QColor("white"))
+                            temp_time = datetime.now()
+                            self.append_colored_text('''{} Ch{} Over current'''.format(temp_time,row))
                         else:
                             item.setBackground(self.colors_para["IMonL"])
                             item.setForeground(QColor("black"))
@@ -870,6 +894,9 @@ class DataMonitor(QMainWindow):
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     self.table_mon.setItem(row,col, item)
                     logging.info("CH{} Status :  {}".format(row,value))
+                    if value == "UNKNOWN":
+                        temp_time = datetime.now()
+                        self.append_colored_text('''{} Ch{} Error (Trip estimated)'''.format(temp_time,row))
 
 
 
@@ -1031,6 +1058,11 @@ class DataMonitor(QMainWindow):
 
         self.Set_Button()
         self.DataTaking_once()
+        temp_time = datetime.now()
+        if checked == True:
+            self.terminal_output.appendPlainText("{} Ch{}. is shown".format(temp_time,row))
+        else:
+            self.terminal_output.appendPlainText("{} Ch{}. is hidden".format(temp_time,row))
 
     def toggle_table_visibility_col(self, checked, col):
         if(col < self.table_mon.columnCount()):
@@ -1043,6 +1075,11 @@ class DataMonitor(QMainWindow):
 
         self.Set_Button()
         self.DataTaking_once()
+        temp_time = datetime.now()
+        if checked == True:
+            self.terminal_output.appendPlainText('''{} parameter "{}". is shown'''.format(temp_time,self.col_headers[col]))
+        else:
+            self.terminal_output.appendPlainText('''{} parameter "{}". is hidden'''.format(temp_time,self.col_headers[col]))
 
     def Set_Button(self,):
         target_col_index = self.parameters.index("PW")
@@ -1067,6 +1104,21 @@ class DataMonitor(QMainWindow):
                 if not self.table_set.isColumnHidden(i)]
             )
         
+
+    def append_colored_text(self, text, color="red"):
+        cursor = self.terminal_output.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        self.terminal_output.setTextCursor(cursor)
+        fmt = QTextCharFormat()
+        fmt.setForeground(QColor(color))
+        cursor.setCharFormat(fmt)
+        cursor.insertText("\n" + text)
+        self.terminal_output.setTextCursor(cursor)
+        self.terminal_output.ensureCursorVisible()
+        fmt.setForeground(QColor("black"))
+        cursor.setCharFormat(fmt)
+        self.terminal_output.setTextCursor(cursor)
+
 
 
 if __name__ == "__main__":

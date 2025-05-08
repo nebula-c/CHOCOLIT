@@ -11,7 +11,7 @@ class VME_READ():
     # __address_modifier = vme.AddressModifiers["A32_U_DATA"]
     # __data_width = vme.DataWidth["D16"]
     __imon_zoom = True
-    __init_success = False
+    is_init_success = False
     
     # device: vme.Device
 
@@ -23,7 +23,7 @@ class VME_READ():
             from caen_libs import caenvme as vme
             self.vme = vme
             self.device = self.vme.Device.open(self.vme.BoardType[self.__boardtype], self.__linknumber, self.__conetnode)
-            self.__init_success = True
+            self.is_init_success = True
             register_map = copy.deepcopy(REGISTER_MAP)
             
             
@@ -52,7 +52,7 @@ class VME_READ():
 
             
         except:
-            self.__init_success = False
+            self.is_init_success = False
             
 
     def setboardtype(self,myboardtype):
@@ -76,7 +76,7 @@ class VME_READ():
         return value
     
     # def convert_register_map(self,):
-    #     if(self.__init_success):
+    #     if(self.is_init_success):
     #         converted = {}
     #         for key, address in self.register_map.items():
     #             converted[key] = self.read_cycle(address)
@@ -85,7 +85,7 @@ class VME_READ():
     #         return
     
     def Get_data_rapid(self,):
-        if(self.__init_success):
+        if(self.is_init_success):
             converted = {}
             for key, address in self.rapid_reg_map.items():
                 converted[key] = self.read_cycle(address)
@@ -94,7 +94,7 @@ class VME_READ():
             return
     
     def Get_data_slow(self,):
-        if(self.__init_success):
+        if(self.is_init_success):
             converted = {}
             for key, address in self.slow_reg_map.items():
                 converted[key] = self.read_cycle(address)
@@ -103,7 +103,7 @@ class VME_READ():
             return
             
     def Get_data_once(self,):
-        if(self.__init_success):
+        if(self.is_init_success):
             converted = {}
             for key, address in self.once_reg_map.items():
                 converted[key] = self.read_cycle(address)
@@ -112,7 +112,7 @@ class VME_READ():
             return
 
     def write_pw(self,mych_address,val):
-        if(self.__init_success):
+        if(self.is_init_success):
             address = self.slow_reg_map[mych_address]
             try:
                 self.device.write_cycle(self.__vme_base_address | address, val, self.__address_modifier, self.__data_width)
@@ -123,7 +123,7 @@ class VME_READ():
 
 
     def setImonZoom(self,):
-        if(self.__init_success):
+        if(self.is_init_success):
             if(self.__imon_zoom):
                 self.__imon_zoom = False
                 for i_ch in range(6):
@@ -145,7 +145,7 @@ class VME_READ():
             return
 
     def modi_reg_map(self,bool_map):
-        if(self.__init_success):
+        if(self.is_init_success):
             register_map = copy.deepcopy(REGISTER_MAP)
             false_keys = [k for k, v in bool_map.items() if v is False]
             for fk in false_keys:
