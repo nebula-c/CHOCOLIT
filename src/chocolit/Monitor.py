@@ -391,6 +391,11 @@ class DataMonitor(QMainWindow):
         self.timer2.timeout.connect(self.VME_Run_set)
         self.timer2.start(500)
 
+        self.timer3 = QTimer(self)
+        # self.timer3.timeout.connect(self.check_file_size)
+        self.timer3.timeout.connect(lambda: self.check_file_size(log_filename))
+        self.timer3.start(10000)
+        
         
         self.time_counter = 0
         self.imon_values = []
@@ -1120,6 +1125,15 @@ class DataMonitor(QMainWindow):
         self.terminal_output.setTextCursor(cursor)
 
 
+    def check_file_size(self,log_filename):
+        temp_time = datetime.now()
+        if os.path.isfile(log_filename):
+            size_bytes = os.path.getsize(log_filename)
+            size_kb = size_bytes / 1024  # KB로 변환
+
+            self.terminal_output.appendPlainText("{} Log-file({}) size : {:.2f} KB".format(temp_time,log_filename,size_kb))
+        else:
+            self.terminal_output.appendPlainText('''{} No logfile named "{}"'''.format(temp_time,log_filename))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
