@@ -48,7 +48,7 @@ class DataMonitor(QMainWindow):
 
 
         super().__init__()
-        self.setWindowTitle("Channel Data Monitor")
+        self.setWindowTitle("CHOCOLIT")
         self.setGeometry(100, 100, 800, 600)
         
         
