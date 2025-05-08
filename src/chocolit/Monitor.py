@@ -232,7 +232,7 @@ class DataMonitor(QMainWindow):
             checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
             checkbox.toggled.connect(lambda checked: setattr(self, 'row_channels', [k for k, v in self.dict_reg_bool.items() if v and "CH" in k]))
             checkbox.toggled.connect(lambda checked, r=row: self.toggle_table_visibility_row(checked, r))
-            checkbox.toggled.connect(lambda checked, r=row: logging.info(f"CH{r} logging :  {checked}"))
+            checkbox.toggled.connect(lambda checked, r=row: logging.info(f"CH{r} logging : {checked}"))
             
 
 
@@ -253,7 +253,7 @@ class DataMonitor(QMainWindow):
             checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
             checkbox.toggled.connect(lambda checked, c=col: self.toggle_table_visibility_col(checked, c))
             
-            checkbox.toggled.connect(lambda checked, name=self.col_headers[col]: logging.info(f"{name} logging :  {checked}"))
+            checkbox.toggled.connect(lambda checked, name=self.col_headers[col]: logging.info(f"{name} logging : {checked}"))
 
 
             toggle_col_box.addWidget(checkbox)
@@ -789,7 +789,7 @@ class DataMonitor(QMainWindow):
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     self.table_mon.setItem(row,col, item)
-                    logging.info("CH{} IMon :  {} uA".format(row,value))
+                    logging.info("CH{} IMon : {} uA".format(row,value))
                     
                     col_iset = self.col_headers.index("ISet")-self.table_mon.columnCount()
                     if self.table_set.item(row,col_iset) is not None:
@@ -820,7 +820,7 @@ class DataMonitor(QMainWindow):
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     self.table_mon.setItem(row,col, item)
-                    logging.info("CH{} IMon :  {} uA".format(row,value))
+                    logging.info("CH{} IMon : {} uA".format(row,value))
 
                     col_iset = self.col_headers.index("ISet")-self.table_mon.columnCount()
                     if self.table_set.item(row,col_iset) is not None:
@@ -849,7 +849,7 @@ class DataMonitor(QMainWindow):
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     self.table_mon.setItem(row,col, item)
-                    logging.info("CH{} VMon :  {} V".format(row,value))
+                    logging.info("CH{} VMon : {} V".format(row,value))
 
 
             if self.dict_reg_bool["Status"]:
@@ -898,7 +898,7 @@ class DataMonitor(QMainWindow):
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     self.table_mon.setItem(row,col, item)
-                    logging.info("CH{} Status :  {}".format(row,value))
+                    logging.info("CH{} Status : {}".format(row,value))
                     if value == "UNKNOWN":
                         temp_time = datetime.now()
                         self.append_colored_text('''{} Ch{} Error (Trip estimated)'''.format(temp_time,row))
@@ -929,7 +929,7 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["ISet"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
-                    logging.info("CH{} ISet :  {} uA".format(row,value))
+                    logging.info("CH{} ISet : {} uA".format(row,value))
                     
 
             if self.dict_reg_bool["VSet"]:
@@ -946,7 +946,7 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["VSet"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
-                    logging.info("CH{} VSet :  {} V".format(row,value))
+                    logging.info("CH{} VSet : {} V".format(row,value))
 
 
             if self.dict_reg_bool["RUp"]:
@@ -963,7 +963,7 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["RUp"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
-                    logging.info("CH{} RampUp :  {} Vps".format(row,value))
+                    logging.info("CH{} RampUp : {} Vps".format(row,value))
 
 
             if self.dict_reg_bool["RDwn"]:
@@ -980,7 +980,7 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["RDwn"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
-                    logging.info("CH{} RampDown :  {} Vps".format(row,value))
+                    logging.info("CH{} RampDown : {} Vps".format(row,value))
 
 
             if self.dict_reg_bool["Temp"]:
@@ -997,7 +997,7 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["Temp"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
-                    logging.info("CH{} Temp :  {} C".format(row,value))
+                    logging.info("CH{} Temp : {} C".format(row,value))
 
 
             if self.dict_reg_bool["Trip"]:
@@ -1014,15 +1014,9 @@ class DataMonitor(QMainWindow):
                     item.setBackground(self.colors_para["Trip"])
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.table_set.setItem(row,col, item)
-                    logging.info("CH{} Trip :  {} sec".format(row,value))
+                    logging.info("CH{} Trip : {} sec".format(row,value))
 
         self.table_set.blockSignals(False)
-
-    
-    # def on_return_pressed(self,):
-    #     user_input = self.terminal_input.text().strip()
-    #     self.terminal_output.appendPlainText(user_input)
-    #     self.terminal_input.clear()
 
     def on_cell_activated(self, row, col):
         self.editing_cells.add((row, col))
@@ -1053,6 +1047,10 @@ class DataMonitor(QMainWindow):
             value = round(float(new_value) / 0.1,1)
 
         self.__vme.write_value(key,value)
+        
+        temp_time = datetime.now()
+        logging.info("{} {} : {}".format(row,col,new_value))
+        self.terminal_output.appendPlainText("{} {} {} is set to {}".format(temp_time,row,col,new_value))
 
     def toggle_table_visibility_row(self, checked, row):
         self.table_mon.setRowHidden(row, not checked)
