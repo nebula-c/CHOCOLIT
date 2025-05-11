@@ -232,7 +232,7 @@ class DataMonitor(QMainWindow):
             checkbox.toggled.connect(lambda checked: self.__vme.modi_reg_map(self.dict_reg_bool))
             checkbox.toggled.connect(lambda checked: setattr(self, 'row_channels', [k for k, v in self.dict_reg_bool.items() if v and "CH" in k]))
             checkbox.toggled.connect(lambda checked, r=row: self.toggle_table_visibility_row(checked, r))
-            checkbox.toggled.connect(lambda checked, r=row: logging.info(f"CH{r} logging : {checked}"))
+            checkbox.toggled.connect(lambda checked, r=row: logging.info(f"CH{r} logging : {not checked}"))
             
 
 
