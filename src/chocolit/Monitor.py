@@ -740,10 +740,13 @@ class DataMonitor(QMainWindow):
     def toggle_button_state(self,):
         button = self.sender()
         key = None
-        for row in range(self.table_mon.rowCount()):
+        # for row in range(self.table_mon.rowCount()):
+        for ch in self.row_channels:
+            row = int(ch[2:])
             if self.table_mon.cellWidget(row, 1) == button:
-                channel_name = self.table_mon.verticalHeaderItem(row).text()
-                key = "{}_PW".format(channel_name)
+                # channel_name = self.table_mon.verticalHeaderItem(row).text()
+                # key = "{}_PW".format(channel_name)
+                key = "{}_PW".format(ch)
                 break
         
         if button.text() == "ON":
@@ -764,7 +767,8 @@ class DataMonitor(QMainWindow):
                 col = self.col_headers.index("PW")
                 mykey = "{}_PW".format(ch)
                 origin_val = self.reg_map_rapid[mykey]
-                mybutton = self.table_mon.cellWidget(self.row_channels.index(ch),self.col_headers.index("PW"))
+                # mybutton = self.table_mon.cellWidget(self.row_channels.index(ch),self.col_headers.index("PW"))
+                mybutton = self.table_mon.cellWidget(row,self.col_headers.index("PW"))
                 if origin_val == 0:
                     value = "OFF"
                     mybutton.setText("OFF")
